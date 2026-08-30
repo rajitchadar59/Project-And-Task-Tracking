@@ -24,3 +24,8 @@
 *   **Chose:** Axios Interceptors.
 *   **Rejected:** Manually fetching and attaching the JWT token in every individual API call.
 *   **Why:** Interceptors centralize the logic. If a token expires (401 response), the interceptor automatically wipes the local storage and kicks the user back to `/auth`, ensuring security without duplicating code.
+
+**6. Iterative Schema Refactoring**
+*   **Chose:** To commit the basic `Project` schema and UI first, before implementing the strict "members can only see their own projects" rule.
+*   **Rejected:** Refactoring the schema and controller all at once in a single, massive commit.
+*   **Why:** The assessment explicitly requires an incremental Git history that shows the design changing along the way. Committing the working baseline first, then refactoring to add a `members` array in the next commit, clearly demonstrates iterative development.
