@@ -1,45 +1,83 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from '../axiosPatch';
 import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { role } = useAuth();
+  const { role, logout, user } = useAuth();
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const { data } = await axios.get('/projects');
+      setProjects(data);
+    } catch (err) {
+      console.error("Failed to fetch projects");
+    }
+  };
+
+  const handleCreateProject = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('/projects', { name, description });
+      setName('');
+      setDescription('');
+      fetchProjects(); // Refresh list after creation
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to create project');
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth');
+  };
 
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1>Overview</h1>
-        <p>Welcome back. You are logged in as a <strong>{role}</strong>.</p>
+        <h2>Projects Dashboard</h2>
+        <div className="header-actions">
+          <span className="role-badge">{role}</span>
+          <button onClick={handleLogout} className="logout-btn">Logout</button>
+        </div>
       </header>
 
-      {/* Placeholder grid for the required assignment metrics */}
-      <section className="metrics-grid">
-        <div className="metric-card">
-          <h3>Open Tasks</h3>
-          <span className="metric-value">--</span>
-        </div>
-        <div className="metric-card alert">
-          <h3>Overdue Tasks</h3>
-          <span className="metric-value">--</span>
-        </div>
-        <div className="metric-card">
-          <h3>Due This Week</h3>
-          <span className="metric-value">--</span>
-        </div>
-        <div className="metric-card">
-          <h3>Completed This Week</h3>
-          <span className="metric-value">--</span>
-        </div>
-      </section>
+      {/* Sirf Manager ko Project create karne ka option dikhega */}
+      {role === 'Manager' && (
+        <form className="create-project-form" onSubmit={handleCreateProject}>
+          <h3>Create New Project</h3>
+          <input 
+            type="text" placeholder="Project Name" 
+            value={name} onChange={(e) => setName(e.target.value)} required 
+          />
+          <input 
+            type="text" placeholder="Description" 
+            value={description} onChange={(e) => setDescription(e.target.value)} required 
+          />
+          <button type="submit">Create Project</button>
+        </form>
+      )}
 
-      <section className="dashboard-main">
-        <div className="chart-container">
-          <h3>Completions (Last 8 Weeks)</h3>
-          <div className="chart-placeholder">
-            <p>Chart data will render here</p>
+      <div className="projects-grid">
+        {projects.map(project => (
+          <div key={project._id} className="project-card">
+            <h3>{project.name}</h3>
+            <p>{project.description}</p>
+            <small>Owner: {project.owner?.name}</small>
+            <Link to={`/projects/${project._id}`} className="view-btn">View Tasks</Link>
           </div>
-        </div>
-      </section>
+        ))}
+        {projects.length === 0 && <p>No active projects found.</p>}
+      </div>
     </div>
   );
 };
