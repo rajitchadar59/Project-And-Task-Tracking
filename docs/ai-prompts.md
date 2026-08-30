@@ -12,6 +12,6 @@
 
 **Goal: Core Entities & Task Dependencies**
 
-*   **Prompt 4:** "Give me the Project and Task schemas and controllers for creating projects, assigning tasks, and preventing tasks from advancing if dependencies are incomplete."
-    *   **Result (Wrong/Suboptimal Output):** The AI generated a Task schema with self-referencing `dependencies` and a controller that enforced status blocking. However, the generated controllers included redundant authentication checks and assumed a completely different middleware structure.
-    *   **What I changed:** I instructed the AI to rewrite the controllers to map specifically to the custom `authMiddleware` I had already built. I forced it to explicitly utilize my existing `req.userId` and `req.role` parameters rather than generating new, conflicting validation functions.
+*   **Prompt 4:** "I am designing the Mongoose schemas for Projects and Tasks. What fields are essential for a task management app where tasks need to block each other?"
+*   **Result (Over-engineered Output):** The AI suggested a massive schema that included unnecessary fields like `estimatedHours`, `tags`, `attachments`, and `storyPoints`. However, it did correctly suggest using a self-referencing array (`[{ type: ObjectId, ref: 'Task' }]`) to handle dependencies.
+*   **What I changed:** I rejected the bloated schema because it went way beyond the assessment's strict 12-hour scope. I manually stripped it down to just the required fields (title, description, status, project, assignedTo, dependencies, dueDate). While I used the AI's structural idea for dependencies, I wrote the actual status-blocking controller logic myself so it would perfectly integrate with my existing `authMiddleware` and `req.userId` context.
