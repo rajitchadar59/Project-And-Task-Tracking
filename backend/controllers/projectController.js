@@ -121,6 +121,20 @@ const getProjectById = async (req, res) => {
 
 
 
+const getArchivedProjects = async (req, res) => {
+  try {
+    const projects = await Project.find({ isArchived: true })
+      .populate('owner', 'name')
+      .populate('members', 'name email');
+      
+    res.status(200).json(projects);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch archived projects' });
+  }
+};
 
-module.exports = { createProject, getProjects, archiveProject, updateProject, restoreProject , getProjectById};
+
+
+
+module.exports = { createProject, getProjects, archiveProject, updateProject, restoreProject , getProjectById , getArchivedProjects};
 
