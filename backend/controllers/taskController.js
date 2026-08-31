@@ -172,5 +172,103 @@ const batchUpdateTasks = async (req, res) => {
 };
 
 
-module.exports = { createTask, getTasksByProject, updateTask, deleteTask, getGlobalTasks, batchUpdateTasks };
+
+
+const getDashboardStats = async (req, res) => {
+  try {
+    let query = {};
+    
+    if (req.role === 'Member') {
+      query.assignedTo = req.userId;
+    }
+
+    const tasks = await Task.find(query).populate('assignedTo', 'name');
+
+    const now = new Date();
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setDate(now.getDate() - now.getDay()); 
+    startOfThisWeek.setHours(0, 0, 0, 0);
+
+    const endOfThisWeek = new Date(startOfThisWeek);
+    endOfThisWeek.setDate(startOfThisWeek.getDate() + 6);
+    endOfThisWeek.setHours(23, 59, 59, 999);
+
+    const startOf8WeeksAgo = new Date(startOfThisWeek);
+    startOf8WeeksAgo.setDate(startOfThisWeek.getDate() - (7 * 7));
+
+    let stats = {
+      open: 0,
+      overdue: 0,
+      dueThisWeek: 0,
+      completedThisWeek: 0,
+      byStatus: { 'To Do': 0, 'In Progress': 0, 'Done': 0 },
+      byAssignee: {},
+      completionsByWeek: {} 
+    };
+
+   
+    for(let i = 7; i >= 0; i--) {
+      let weekStart = new Date(startOfThisWeek);
+      weekStart.setDate(startOfThisWeek.getDate() - (i * 7));
+      stats.completionsByWeek[weekStart.toLocaleDateString()] = 0;
+    }
+
+    tasks.forEach(t => {
+     
+      if (stats.byStatus[t.status] !== undefined) {
+        stats.byStatus[t.status]++;
+      } else {
+        stats.byStatus[t.status] = 1;
+      }
+
+     
+      const assigneeName = t.assignedTo ? t.assignedTo.name : 'Unassigned';
+      stats.byAssignee[assigneeName] = (stats.byAssignee[assigneeName] || 0) + 1;
+
+      // 3. Headline Numbers
+      if (t.status !== 'Done') {
+        stats.open++;
+        if (t.dueDate) {
+          const due = new Date(t.dueDate);
+          if (due < now) stats.overdue++;
+          if (due >= startOfThisWeek && due <= endOfThisWeek) stats.dueThisWeek++;
+        }
+      } else {
+        // We use updatedAt as a proxy for completion date
+        const updated = new Date(t.updatedAt || t.createdAt);
+        if (updated >= startOfThisWeek && updated <= endOfThisWeek) {
+          stats.completedThisWeek++;
+        }
+        
+        // 4. Completions over last 8 weeks Chart
+        if (updated >= startOf8WeeksAgo) {
+          let taskWeekStart = new Date(updated);
+          taskWeekStart.setDate(updated.getDate() - updated.getDay());
+          taskWeekStart.setHours(0, 0, 0, 0);
+          const weekKey = taskWeekStart.toLocaleDateString();
+          if (stats.completionsByWeek[weekKey] !== undefined) {
+            stats.completionsByWeek[weekKey]++;
+          }
+        }
+      }
+    });
+
+    res.status(200).json(stats);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+  }
+};
+
+module.exports = { 
+  createTask, 
+  getTasksByProject, 
+  updateTask, 
+  deleteTask, 
+  getGlobalTasks, 
+  batchUpdateTasks, 
+  getDashboardStats 
+};
+
+
+
 
