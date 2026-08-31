@@ -28,4 +28,9 @@
 **6. Iterative Schema Refactoring**
 *   **Chose:** To commit the basic `Project` schema and UI first, before implementing the strict "members can only see their own projects" rule.
 *   **Rejected:** Refactoring the schema and controller all at once in a single, massive commit.
-*   **Why:** The assessment explicitly requires an incremental Git history that shows the design changing along the way. Committing the working baseline first, then refactoring to add a `members` array in the next commit, clearly demonstrates iterative development.
+*   **Why:** The assessment explicitly requires an incremental Git history that shows the design changing along the way. Committing the working baseline first, then refactoring to add a `members` array in the next commit, clearly demonstrates iterative development. 
+
+**7. Project-User Relationship Strategy**
+*   **Chose:** Adding a `members` array containing User ObjectIds directly to the `Project` schema.
+*   **Rejected:** Creating a separate `ProjectMember` mapping/join collection (like in SQL).
+*   **Why:** MongoDB handles document arrays efficiently. A simple `members` array makes the strict visibility query (`{ members: req.userId }`) incredibly fast and straightforward without requiring complex aggregation pipelines.

@@ -16,3 +16,7 @@
     2. Setting up CRUD controllers and React UI (Dashboard & ProjectView).
 *   **Why this order:** A working baseline was needed to test the API routes and frontend data flow before implementing complex relationship filtering.
 *   **What was pivoted:** Realized during UI testing that the brief strictly requires Members to only see projects they belong to. Instead of rushing the fix, I stopped to commit the baseline first to maintain a clear, incremental Git history. The next step is refactoring the `Project` schema to include a `members` array.
+
+**Phase 3: Member Visibility & Assignment (Completed)**
+*   **Action:** Added a `members` array to the `Project` schema and modified the `getProjects` controller to filter results strictly based on `req.userId` for 'Member' roles.
+*   **UI Update:** Updated the Manager dashboard to fetch all users and assign them via checkboxes during project creation.

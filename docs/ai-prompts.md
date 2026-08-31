@@ -15,3 +15,8 @@
 *   **Prompt 4:** "I am designing the Mongoose schemas for Projects and Tasks. What fields are essential for a task management app where tasks need to block each other?"
 *   **Result (Over-engineered Output):** The AI suggested a massive schema that included unnecessary fields like `estimatedHours`, `tags`, `attachments`, and `storyPoints`. However, it did correctly suggest using a self-referencing array (`[{ type: ObjectId, ref: 'Task' }]`) to handle dependencies.
 *   **What I changed:** I rejected the bloated schema because it went way beyond the assessment's strict 12-hour scope. I manually stripped it down to just the required fields (title, description, status, project, assignedTo, dependencies, dueDate). While I used the AI's structural idea for dependencies, I wrote the actual status-blocking controller logic myself so it would perfectly integrate with my existing `authMiddleware` and `req.userId` context.
+
+**Goal: Member Visibility Rules**
+*   **Prompt 5:** "How should I structure the database in MongoDB to ensure that Members can only see projects they belong to, while Managers can see everything?"
+*   **Result:** The AI suggested adding a `members` array of ObjectIds to the Project schema and provided the Mongoose query `Project.find({ members: req.userId })`.
+*   **What I changed:** The AI's code applied the filter globally. I modified the controller logic to wrap this query strictly inside an `if (req.role === 'Member')` block, ensuring Managers automatically bypass the restriction and see all active projects as required by the assessment.
