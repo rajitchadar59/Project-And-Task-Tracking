@@ -44,3 +44,8 @@
 *   **Chose:** Server-side validation inside the `updateTask` controller (`PATCH /api/tasks/:id`).
 *   **Rejected:** Relying purely on frontend UI blocking (disabling the dropdown) or using complex Mongoose pre-save hooks.
 *   **Why:** Frontend validation is insecure and easily bypassed via API clients. Pre-save hooks make sending specific error messages (like the exact names of the blocking tasks) back to the client difficult. Controller-level validation ensures bulletproof security while allowing a clean error response containing the exact `blockingTasks` array.
+
+
+**10. Task Visibility Architecture (Global vs. Project)**
+*   **Chose:** Implementing a split-visibility model. In the "My Tasks" (Global) view, members only see explicitly assigned tasks. In the "Project" view, members see all tasks within that project.
+*   **Why:** Global view is for personal focus (what *I* need to do). Project view requires transparency so developers can see unassigned tasks and track tasks that are blocking their own work (Dependency Blocking).

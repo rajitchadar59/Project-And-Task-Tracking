@@ -28,3 +28,7 @@
 **Phase 5: Task Dependencies & Blocking (Completed)**
 *   **Action:** Created the `Task` schema with a self-referencing `dependencies` array. Built the frontend `ProjectView` to allow users to create tasks and assign blocking dependencies.
 *   **Strict Rule Enforced:** Implemented logic in the `updateTask` controller. When a user tries to change a task status to 'Done', the server maps through its dependencies. If any dependency is not 'Done', the server rejects the request and returns an array of blocking task names to display in the UI.
+
+**Phase 6: Global Task Search & Filter (Completed)**
+*   **Action:** Created a global task retrieval controller (`getGlobalTasks`) supporting query parameters for text search (`$regex`), status, priority, and sorting. Built a dedicated `GlobalTasks` frontend page for users to apply these filters.
+*   **Strict Rule Enforced:** Enforced role-based access control inside the global query. In the Global View, Members are strictly limited to seeing tasks where their ID matches the `assignedTo` field. Managers bypass this and see all tasks.

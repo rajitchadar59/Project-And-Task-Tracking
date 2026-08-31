@@ -31,3 +31,9 @@
 *   **Prompt 7:** "How do I return a clear error message showing exactly which blocking tasks are preventing a task from being marked as Done?"
 *   **Result:** The AI suggested using `populate` to get the dependency details and then mapping over the incomplete ones to extract their titles into a `blockingTasks` array.
 *   **What I changed:** I integrated this directly into my existing error-handling block. Instead of just throwing a generic 400 error, the frontend now explicitly intercepts `err.response.data.blockingTasks` and shows a native browser alert listing the exact tasks the user needs to finish first.
+
+
+**Goal: Server-Side Search & Filtering**
+*   **Prompt 8:** "How to implement a server-side text search and status filter for tasks in MongoDB/Express?"
+*   **Result:** The AI provided a standard Mongoose query using `$regex` with `$options: 'i'` for text search, combined with direct matches for status and priority.
+*   **What I changed:** I intercepted the AI's base query and injected a strict role-based filter (`if (req.role === 'Member') query.assignedTo = req.userId;`) *before* applying any user-selected filters, ensuring data isolation rules are never bypassed by search parameters.
