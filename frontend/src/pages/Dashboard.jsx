@@ -11,7 +11,6 @@ const Dashboard = () => {
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]); 
   
-
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedMembers, setSelectedMembers] = useState([]); 
@@ -95,8 +94,14 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Updated Header with Global Tasks Link */}
       <header className="dashboard-header">
-        <h2>Projects Dashboard</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <h2>Projects Dashboard</h2>
+          <Link to="/tasks/global" className="view-btn" style={{ textDecoration: 'none', background: '#333' }}>
+            Search All Tasks
+          </Link>
+        </div>
         <div className="header-actions">
           <span className="role-badge">{role}</span>
           <button onClick={handleLogout} className="logout-btn">Logout</button>

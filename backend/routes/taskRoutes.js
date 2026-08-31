@@ -1,10 +1,12 @@
 const express = require('express');
-const { createTask, getTasksByProject, updateTask, deleteTask } = require('../controllers/taskController');
+const { createTask, getTasksByProject, updateTask, deleteTask , getGlobalTasks } = require('../controllers/taskController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 router.use(authMiddleware);
+
+router.get('/global', getGlobalTasks);
 
 router.post('/', createTask);
 router.get('/project/:projectId', getTasksByProject);

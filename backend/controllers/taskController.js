@@ -86,4 +86,55 @@ const deleteTask = async (req, res) => {
   }
 };
 
-module.exports = { createTask, getTasksByProject, updateTask, deleteTask };
+
+const getGlobalTasks = async (req, res) => {
+  try {
+    const { status, priority, search, sortBy } = req.query;
+    
+    
+    let query = {};
+
+    
+    if (req.role === 'Member') {
+      query.assignedTo = req.userId;
+    }
+   
+
+  
+    if (status) {
+      query.status = status;
+    }
+
+   
+    if (priority) {
+      query.priority = priority;
+    }
+
+    
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } }, 
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    
+    let sortOptions = {};
+    if (sortBy === 'dueDate') {
+      sortOptions.dueDate = 1; 
+    } else {
+      sortOptions.createdAt = -1;
+    }
+
+    const tasks = await Task.find(query)
+      .populate('project', 'name')
+      .populate('assignedTo', 'name')
+      .sort(sortOptions);
+
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch global tasks' });
+  }
+};
+
+module.exports = { createTask, getTasksByProject, updateTask, deleteTask , getGlobalTasks };
