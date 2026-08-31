@@ -106,6 +106,21 @@ const restoreProject = async (req, res) => {
   }
 };
 
+const getProjectById = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id)
+      .populate('owner', 'name')
+      .populate('members', 'name email');
+      
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    res.status(200).json(project);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch project details' });
+  }
+};
 
-module.exports = { createProject, getProjects, archiveProject, updateProject, restoreProject };
+
+
+
+module.exports = { createProject, getProjects, archiveProject, updateProject, restoreProject , getProjectById};
 

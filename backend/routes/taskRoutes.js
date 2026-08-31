@@ -1,18 +1,14 @@
 const express = require('express');
-const { createTask, getProjectTasks, updateTaskStatus } = require('../controllers/taskController');
-const { authMiddleware, authorizeRole } = require('../middleware/authMiddleware');
-
+const { createTask, getTasksByProject, updateTask, deleteTask } = require('../controllers/taskController');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-
 router.use(authMiddleware);
 
-
-router.get('/project/:projectId', getProjectTasks);
-router.patch('/:id/status', updateTaskStatus);
-
-
-router.post('/', authorizeRole('Manager'), createTask);
+router.post('/', createTask);
+router.get('/project/:projectId', getTasksByProject);
+router.patch('/:id', updateTask);
+router.delete('/:id', deleteTask);
 
 module.exports = router;
