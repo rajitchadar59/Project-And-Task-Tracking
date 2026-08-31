@@ -5,19 +5,20 @@ import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { role, logout, user } = useAuth();
+  const { role, logout } = useAuth();
   const navigate = useNavigate();
   
   const [projects, setProjects] = useState([]);
-  const [users, setUsers] = useState([]); // Database ke saare users
+  const [users, setUsers] = useState([]); 
   
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState([]); // Jo users project me add karne hain
+  const [selectedMembers, setSelectedMembers] = useState([]); 
+  const [editingProjectId, setEditingProjectId] = useState(null);
 
   useEffect(() => {
     fetchProjects();
-    // Sirf manager ko users ki list chahiye assign karne ke liye
     if (role === 'Manager') {
       fetchUsers();
     }
@@ -47,20 +48,43 @@ const Dashboard = () => {
     );
   };
 
-  const handleCreateProject = async (e) => {
+  const handleEditClick = (project) => {
+    setEditingProjectId(project._id);
+    setName(project.name);
+    setDescription(project.description);
+    setSelectedMembers(project.members.map(m => m._id));
+    window.scrollTo(0, 0);
+  };
+
+  const resetForm = () => {
+    setEditingProjectId(null);
+    setName('');
+    setDescription('');
+    setSelectedMembers([]);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/projects', { 
-        name, 
-        description, 
-        members: selectedMembers 
-      });
-      setName('');
-      setDescription('');
-      setSelectedMembers([]);
+      if (editingProjectId) {
+        await axios.patch(`/projects/${editingProjectId}`, { name, description, members: selectedMembers });
+      } else {
+        await axios.post('/projects', { name, description, members: selectedMembers });
+      }
+      resetForm();
       fetchProjects();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to create project');
+      alert(err.response?.data?.error || 'Failed to save project');
+    }
+  };
+
+  const handleArchive = async (projectId) => {
+    if (!window.confirm('Are you sure you want to archive this project?')) return;
+    try {
+      await axios.patch(`/projects/${projectId}/archive`);
+      fetchProjects(); 
+    } catch (err) {
+      alert('Failed to archive project');
     }
   };
 
@@ -80,8 +104,8 @@ const Dashboard = () => {
       </header>
 
       {role === 'Manager' && (
-        <form className="create-project-form" onSubmit={handleCreateProject} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-          <h3>Create New Project</h3>
+        <form className="create-project-form" onSubmit={handleSubmit} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+          <h3>{editingProjectId ? 'Edit Project' : 'Create New Project'}</h3>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
             <input 
               type="text" placeholder="Project Name" 
@@ -109,7 +133,12 @@ const Dashboard = () => {
             </div>
           </div>
           
-          <button type="submit" style={{ alignSelf: 'flex-start' }}>Create Project</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button type="submit">{editingProjectId ? 'Update Project' : 'Create Project'}</button>
+            {editingProjectId && (
+              <button type="button" onClick={resetForm} style={{ background: '#ccc', color: '#333' }}>Cancel</button>
+            )}
+          </div>
         </form>
       )}
 
@@ -118,19 +147,24 @@ const Dashboard = () => {
           <div key={project._id} className="project-card">
             <h3>{project.name}</h3>
             <p>{project.description}</p>
-            <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '10px' }}>
+            <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '10px', marginBottom: '15px' }}>
               <p><strong>Owner:</strong> {project.owner?.name}</p>
               <p><strong>Members ({project.members?.length || 0}):</strong> {project.members?.map(m => m.name).join(', ') || 'None'}</p>
             </div>
-            <Link to={`/projects/${project._id}`} className="view-btn">View Tasks</Link>
+            
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <Link to={`/projects/${project._id}`} className="view-btn">View Tasks</Link>
+              {role === 'Manager' && (
+                <>
+                  <button onClick={() => handleEditClick(project)} className="logout-btn" style={{ borderColor: '#333', color: '#333', padding: '4px 10px' }}>Edit</button>
+                  <button onClick={() => handleArchive(project._id)} className="logout-btn" style={{ padding: '4px 10px' }}>Archive</button>
+                </>
+              )}
+            </div>
           </div>
         ))}
         {projects.length === 0 && (
-          <p>
-            {role === 'Member' 
-              ? "You haven't been assigned to any projects yet." 
-              : "No active projects found."}
-          </p>
+          <p>{role === 'Member' ? "You haven't been assigned to any projects yet." : "No active projects found."}</p>
         )}
       </div>
     </div>
