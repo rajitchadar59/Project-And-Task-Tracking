@@ -2,13 +2,13 @@ const Project = require('../models/Project');
 
 const createProject = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, members } = req.body;
     
-   
     const project = await Project.create({
       name,
       description,
-      owner: req.userId 
+      owner: req.userId,
+      members: members || [] 
     });
     
     res.status(201).json(project);
@@ -19,9 +19,17 @@ const createProject = async (req, res) => {
 
 const getProjects = async (req, res) => {
   try {
-   
-    const projects = await Project.find({ isArchived: false })
-      .populate('owner', 'name username email');
+    let query = { isArchived: false };
+
+    
+    if (req.role === 'Member') {
+      query.members = req.userId;
+    }
+    
+
+    const projects = await Project.find(query)
+      .populate('owner', 'name username email')
+      .populate('members', 'name email'); 
       
     res.status(200).json(projects);
   } catch (error) {
