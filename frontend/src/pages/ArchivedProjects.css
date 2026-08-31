@@ -1,0 +1,43 @@
+.archived-container {
+  background-color: #fcfcfc;
+}
+
+.archived-card {
+  opacity: 0.75;
+  border: 1px dashed #999;
+  background-color: #f9f9f9;
+  transition: opacity 0.3s ease;
+}
+
+.archived-card:hover {
+  opacity: 1;
+  border: 1px solid #666;
+}
+
+.archived-details {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.restore-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.restore-btn:hover {
+  background: #218838;
+}
+
+.empty-msg {
+  color: #666;
+  font-style: italic;
+  font-size: 1.1rem;
+}

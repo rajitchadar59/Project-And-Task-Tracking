@@ -9,6 +9,7 @@ import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import ProjectView from './pages/ProjectView';
 import GlobalTasks from './pages/GlobalTasks';
+import ArchivedProjects from './pages/ArchivedProjects'; // Naya import
 import './App.css';
 
 function AppLayout() {
@@ -19,10 +20,8 @@ function AppLayout() {
       {token ? <PrivateNavbar /> : <PublicNavbar />}
 
       <Routes>
-
         <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Home />} />
         <Route path="/auth" element={token ? <Navigate to="/dashboard" /> : <Auth />} />
-
 
         <Route path="/dashboard" element={
           <ProtectedRoute allowedRoles={['Manager', 'Member']}>
@@ -30,6 +29,12 @@ function AppLayout() {
           </ProtectedRoute>
         } />
 
+        {/* YE ROUTE UPAR HONA CHAHIYE */}
+        <Route path="/projects/archived" element={
+          <ProtectedRoute allowedRoles={['Manager']}>
+            <ArchivedProjects />
+          </ProtectedRoute>
+        } />
 
         <Route path="/projects/:id" element={
           <ProtectedRoute allowedRoles={['Manager', 'Member']}>

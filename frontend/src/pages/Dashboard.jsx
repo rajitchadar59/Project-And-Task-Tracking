@@ -94,13 +94,17 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Updated Header with Global Tasks Link */}
       <header className="dashboard-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
           <h2>Projects Dashboard</h2>
           <Link to="/tasks/global" className="view-btn" style={{ textDecoration: 'none', background: '#333' }}>
             Search All Tasks
           </Link>
+          {role === 'Manager' && (
+            <Link to="/projects/archived" className="view-btn" style={{ textDecoration: 'none', background: '#dc3545' }}>
+              View Archived
+            </Link>
+          )}
         </div>
         <div className="header-actions">
           <span className="role-badge">{role}</span>
