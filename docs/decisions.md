@@ -49,3 +49,8 @@
 **10. Task Visibility Architecture (Global vs. Project)**
 *   **Chose:** Implementing a split-visibility model. In the "My Tasks" (Global) view, members only see explicitly assigned tasks. In the "Project" view, members see all tasks within that project.
 *   **Why:** Global view is for personal focus (what *I* need to do). Project view requires transparency so developers can see unassigned tasks and track tasks that are blocking their own work (Dependency Blocking).
+
+
+**11. Soft Deletion over Hard Deletion for Projects**
+* **Chose:** Used an `isArchived: true` flag instead of deleting documents from the database.
+* **Why:** Permanent deletion creates orphaned tasks and destroys historical data. Soft deletion gives Managers a safety net to restore projects.

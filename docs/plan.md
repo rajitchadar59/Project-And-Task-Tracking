@@ -32,3 +32,11 @@
 **Phase 6: Global Task Search & Filter (Completed)**
 *   **Action:** Created a global task retrieval controller (`getGlobalTasks`) supporting query parameters for text search (`$regex`), status, priority, and sorting. Built a dedicated `GlobalTasks` frontend page for users to apply these filters.
 *   **Strict Rule Enforced:** Enforced role-based access control inside the global query. In the Global View, Members are strictly limited to seeing tasks where their ID matches the `assignedTo` field. Managers bypass this and see all tasks.
+
+**Phase 7: Overdue Tasks Filter (Completed)**
+* **Action:** Added a `dueDate` field for tasks and an `isOverdue` query parameter in the global task search.
+* **Strict Rule Enforced:** Overdue queries explicitly filter out tasks with a "Done" status.
+
+**Phase 8: Archived Projects View (Completed)**
+* **Action:** Implemented soft deletion (`isArchived`) for projects and created a dedicated manager dashboard for restoring them.
+* **Strict Rule Enforced:** Both the `/archived` GET route and `/restore` PATCH route are strictly protected by the `authorizeRole('Manager')` middleware.

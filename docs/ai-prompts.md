@@ -37,3 +37,16 @@
 *   **Prompt 8:** "How to implement a server-side text search and status filter for tasks in MongoDB/Express?"
 *   **Result:** The AI provided a standard Mongoose query using `$regex` with `$options: 'i'` for text search, combined with direct matches for status and priority.
 *   **What I changed:** I intercepted the AI's base query and injected a strict role-based filter (`if (req.role === 'Member') query.assignedTo = req.userId;`) *before* applying any user-selected filters, ensuring data isolation rules are never bypassed by search parameters.
+
+
+**Goal: Identifying Past-Due Tasks**
+* **Prompt 9:** "How to filter overdue tasks in Mongoose where the due date is in the past?"
+* **Result:** AI suggested `{ dueDate: { $lt: new Date() } }`.
+* **What I changed:** Added `{ status: { $ne: 'Done' } }` to ensure completed tasks are ignored, even if their deadline has passed.
+
+
+
+**Goal: Soft Deletion & Archiving Projects**
+*   **Prompt 10:** "How to implement an archive feature for projects instead of permanently deleting them in MongoDB?"
+*   **Result:** The AI suggested adding an `isArchived: { type: Boolean, default: false }` field to the Mongoose schema and using `findOneAndUpdate` to toggle this status.
+*   **What I changed:** I explicitly separated the retrieval logic. I updated the main `getProjects` controller to strictly filter out archived projects (`{ isArchived: false }`) for the main dashboard. Then, I built a completely separate, strictly protected Manager-only route (`/archived`) to fetch and restore hidden projects securely.
