@@ -59,3 +59,9 @@
     *   **Result:** The AI provided a backend controller that iterates through `taskIds` using a `for...of` loop. It applies the same blocking-task logic used in single updates, capturing successful IDs in one array and failure objects (with reasons) in another, returning a combined status object to the frontend alert.
 *   **Prompt 13:** "How to export the filtered tasks to a CSV file in React without using heavy external libraries?"
     *   **Result:** The AI generated a custom `handleExportCSV` function using a native browser `Blob`, manually mapping the task fields and escaping quotes before triggering a hidden download link.
+
+
+**Goal: Dashboard Analytics & Charts**
+*   **Prompt 14:** "How to build a dashboard with headline stats and visual charts for task distribution and 8-week completion trends?"
+    *   **Result:** The AI provided a backend `/stats` controller to aggregate data using standard date manipulation, and a frontend integration using `react-chartjs-2` to render Doughnut, Bar, and Line charts.
+    *   **What I changed:** The AI's base code aggregated all tasks globally. I explicitly intercepted the database query at the top of the controller and injected a role-based security filter (`if (req.role === 'Member') query.assignedTo = req.userId;`). This ensures that standard members only see charts and statistics for tasks assigned to them, maintaining strict data isolation.

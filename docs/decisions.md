@@ -59,3 +59,9 @@
 *   **Chose:** I processed batch task updates by looping through them one by one in the Node.js controller using a `for...of` loop, evaluating rules per task, and returning a detailed success/fail summary.
 *   **Rejected:** Using Mongoose bulk operations like `Task.updateMany()`.
 *   **Why:** The assignment explicitly required that illegal moves in a batch (like marking a blocked task as Done) must be rejected with a reason, but *valid* tasks in the same batch must still succeed. A single `updateMany` query would either bypass my JavaScript-level dependency checks or fail the entire operation at once if I tried to use database-level validation. Processing them iteratively ensured isolated validation.
+
+
+**13. Dashboard Data Aggregation Strategy**
+*   **Chose:** Aggregating all dashboard statistics (open counts, overdue, chart distributions) in a single backend controller (`/stats`) and passing a formatted JSON object to the frontend.
+*   **Rejected:** Fetching all raw tasks to the frontend and calculating the stats using JavaScript array methods in React.
+*   **Why:** Fetching all tasks just to count them is incredibly inefficient and slows down the client. Server-side calculation ensures the frontend remains fast and only receives the exact numbers needed for Chart.js.
