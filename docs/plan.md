@@ -24,3 +24,7 @@
 **Phase 4: Project Editing, Archiving & Auto-Unassign (Completed)**
 *   **Action:** Implemented the ability for Managers to edit project details and archive projects. Archiving successfully hides them from the default active view.
 *   **Strict Rule Enforced:** Wrote logic inside the `updateProject` controller so that if a Manager removes a Member from a project, a database query automatically unassigns that user from all tasks within that specific project.
+
+**Phase 5: Task Dependencies & Blocking (Completed)**
+*   **Action:** Created the `Task` schema with a self-referencing `dependencies` array. Built the frontend `ProjectView` to allow users to create tasks and assign blocking dependencies.
+*   **Strict Rule Enforced:** Implemented logic in the `updateTask` controller. When a user tries to change a task status to 'Done', the server maps through its dependencies. If any dependency is not 'Done', the server rejects the request and returns an array of blocking task names to display in the UI.

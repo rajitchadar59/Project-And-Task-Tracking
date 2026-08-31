@@ -39,3 +39,8 @@
 *   **Chose:** Implementing the strict task unassignment logic directly inside the `updateProject` controller using `Task.updateMany`.
 *   **Rejected:** Using MongoDB database triggers or Mongoose `pre-save` middleware on the Project schema.
 *   **Why:** Middleware can make debugging difficult and hide side effects. Keeping the `$unset` query explicitly in the controller makes the business logic highly visible, easier to test, and perfectly handles the specific requirement without over-engineering.
+
+**9. Dependency Blocking Validation**
+*   **Chose:** Server-side validation inside the `updateTask` controller (`PATCH /api/tasks/:id`).
+*   **Rejected:** Relying purely on frontend UI blocking (disabling the dropdown) or using complex Mongoose pre-save hooks.
+*   **Why:** Frontend validation is insecure and easily bypassed via API clients. Pre-save hooks make sending specific error messages (like the exact names of the blocking tasks) back to the client difficult. Controller-level validation ensures bulletproof security while allowing a clean error response containing the exact `blockingTasks` array.

@@ -25,3 +25,9 @@
 *   **Prompt 6:** "When a manager edits a project and removes a member, how can I automatically unassign that member from all tasks in that project in MongoDB?"
 *   **Result:** The AI suggested writing a Mongoose `post` hook that listens for project updates and fires a separate task cleanup function.
 *   **What I changed:** I rejected the `post` hook approach because hooks can become unpredictable during complex updates. Instead, I manually wrote a precise `Task.updateMany` query using the `$unset` operator directly inside my `updateProject` controller. This ensures the cleanup runs synchronously and only when the member list actually changes.
+
+
+**Goal: Preventing Tasks from Completing Prematurely**
+*   **Prompt 7:** "How do I return a clear error message showing exactly which blocking tasks are preventing a task from being marked as Done?"
+*   **Result:** The AI suggested using `populate` to get the dependency details and then mapping over the incomplete ones to extract their titles into a `blockingTasks` array.
+*   **What I changed:** I integrated this directly into my existing error-handling block. Instead of just throwing a generic 400 error, the frontend now explicitly intercepts `err.response.data.blockingTasks` and shows a native browser alert listing the exact tasks the user needs to finish first.
