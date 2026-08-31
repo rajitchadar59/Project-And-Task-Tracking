@@ -1,12 +1,10 @@
 const Task = require('../models/Task');
 const Project = require('../models/Project');
 
-// Create a new task inside a project
 const createTask = async (req, res) => {
   try {
     const { title, description, priority, dueDate, project, assignedTo, dependencies } = req.body;
     
-    // Check if project exists
     const proj = await Project.findById(project);
     if (!proj) return res.status(404).json({ error: 'Project not found' });
 
@@ -20,20 +18,18 @@ const createTask = async (req, res) => {
   }
 };
 
-// Get tasks for a specific project
 const getTasksByProject = async (req, res) => {
   try {
     const { projectId } = req.params;
     const tasks = await Task.find({ project: projectId })
       .populate('assignedTo', 'name email')
-      .populate('dependencies', 'title status'); 
+      .populate('dependencies', 'title status');
       
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 };
-
 
 const updateTask = async (req, res) => {
   try {
@@ -43,7 +39,6 @@ const updateTask = async (req, res) => {
     const task = await Task.findById(id).populate('dependencies');
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
-    
     if (status === 'Done') {
       const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
       
@@ -55,7 +50,6 @@ const updateTask = async (req, res) => {
       }
     }
 
-    
     if (status) task.status = status;
     if (assignedTo !== undefined) task.assignedTo = assignedTo;
     if (title) task.title = title;
@@ -74,7 +68,6 @@ const deleteTask = async (req, res) => {
     const { id } = req.params;
     await Task.findByIdAndDelete(id);
     
-   
     await Task.updateMany(
       { dependencies: id },
       { $pull: { dependencies: id } }
@@ -86,44 +79,37 @@ const deleteTask = async (req, res) => {
   }
 };
 
-
 const getGlobalTasks = async (req, res) => {
   try {
-    const { status, priority, search, sortBy } = req.query;
-    
+    const { status, priority, search, sortBy, isOverdue } = req.query;
     
     let query = {};
 
-    
     if (req.role === 'Member') {
       query.assignedTo = req.userId;
     }
-   
 
-  
-    if (status) {
-      query.status = status;
-    }
+    if (status) query.status = status;
+    if (priority) query.priority = priority;
 
-   
-    if (priority) {
-      query.priority = priority;
-    }
-
-    
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } }, 
+        { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
     }
 
-    
+   
+    if (isOverdue === 'true') {
+      query.dueDate = { $lt: new Date() }; 
+      query.status = { $ne: 'Done' };      
+    }
+
     let sortOptions = {};
     if (sortBy === 'dueDate') {
       sortOptions.dueDate = 1; 
     } else {
-      sortOptions.createdAt = -1;
+      sortOptions.createdAt = -1; 
     }
 
     const tasks = await Task.find(query)
@@ -137,4 +123,4 @@ const getGlobalTasks = async (req, res) => {
   }
 };
 
-module.exports = { createTask, getTasksByProject, updateTask, deleteTask , getGlobalTasks };
+module.exports = { createTask, getTasksByProject, updateTask, deleteTask, getGlobalTasks };

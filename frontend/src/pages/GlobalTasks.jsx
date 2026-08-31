@@ -8,13 +8,12 @@ const GlobalTasks = () => {
   const { role } = useAuth();
   const [tasks, setTasks] = useState([]);
 
- 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
-  const [sortBy, setSortBy] = useState('createdAt'); // Default sort
+  const [sortBy, setSortBy] = useState('createdAt'); 
+  const [isOverdue, setIsOverdue] = useState(false); 
 
-  
   const fetchTasks = async () => {
     try {
       const params = {};
@@ -22,6 +21,7 @@ const GlobalTasks = () => {
       if (status) params.status = status;
       if (priority) params.priority = priority;
       if (sortBy) params.sortBy = sortBy;
+      if (isOverdue) params.isOverdue = true; 
 
       const { data } = await axios.get('/tasks/global', { params });
       setTasks(data);
@@ -30,12 +30,10 @@ const GlobalTasks = () => {
     }
   };
 
- 
   useEffect(() => {
     fetchTasks();
-  }, [status, priority, sortBy]);
+  }, [status, priority, sortBy, isOverdue]);
 
-  
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchTasks();
@@ -51,7 +49,6 @@ const GlobalTasks = () => {
         <span className="role-badge">{role}</span>
       </header>
 
-      {/* Filters Section */}
       <div className="filters-container">
         <form onSubmit={handleSearchSubmit} className="search-form">
           <input 
@@ -82,10 +79,19 @@ const GlobalTasks = () => {
             <option value="createdAt">Sort: Newest First</option>
             <option value="dueDate">Sort: Due Date</option>
           </select>
+          
+          <label style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#FF385C', fontWeight: 'bold', cursor: 'pointer' }}>
+            <input 
+              type="checkbox" 
+              checked={isOverdue} 
+              onChange={(e) => setIsOverdue(e.target.checked)} 
+              style={{ cursor: 'pointer' }}
+            />
+            Show Overdue Tasks Only
+          </label>
         </div>
       </div>
 
-     
       <div className="projects-grid" style={{ marginTop: '20px' }}>
         {tasks.map(task => (
           <div key={task._id} className="project-card" style={{ borderLeft: `4px solid ${task.status === 'Done' ? 'green' : '#FF385C'}` }}>
@@ -101,6 +107,9 @@ const GlobalTasks = () => {
             <div style={{ fontSize: '0.85rem', marginTop: '15px' }}>
               <p><strong>Status:</strong> {task.status}</p>
               <p><strong>Assigned To:</strong> {task.assignedTo?.name || 'Unassigned'}</p>
+              {task.dueDate && (
+                <p><strong>Due Date:</strong> <span style={{color: new Date(task.dueDate) < new Date() && task.status !== 'Done' ? 'red' : 'inherit'}}>{new Date(task.dueDate).toLocaleDateString()}</span></p>
+              )}
             </div>
           </div>
         ))}

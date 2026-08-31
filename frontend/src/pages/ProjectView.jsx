@@ -11,10 +11,10 @@ const ProjectView = () => {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   
-  // New Task State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('Medium');
+  const [dueDate, setDueDate] = useState(''); 
   const [assignedTo, setAssignedTo] = useState('');
   const [selectedDependencies, setSelectedDependencies] = useState([]);
 
@@ -48,13 +48,14 @@ const ProjectView = () => {
         title,
         description,
         priority,
+        dueDate: dueDate || null,
         project: projectId,
         assignedTo: assignedTo || null,
         dependencies: selectedDependencies
       });
-      // Reset form
       setTitle('');
       setDescription('');
+      setDueDate('');
       setAssignedTo('');
       setSelectedDependencies([]);
       fetchTasks();
@@ -68,13 +69,11 @@ const ProjectView = () => {
       await axios.patch(`/tasks/${taskId}`, { status: newStatus });
       fetchTasks();
     } catch (err) {
-      
       if (err.response?.data?.blockingTasks) {
         alert(`Cannot mark as Done!\n\nBlocking Tasks: \n- ${err.response.data.blockingTasks.join('\n- ')}`);
       } else {
         alert(err.response?.data?.error || 'Failed to update status');
       }
-      
       fetchTasks(); 
     }
   };
@@ -101,23 +100,29 @@ const ProjectView = () => {
     <div className="dashboard-container">
       <header className="dashboard-header">
         <div>
-          <Link to="/dashboard" style={{ textDecoration: 'none', color: '#FF385C', fontWeight: 'bold' }}>&larr; Back to Dashboard</Link>
+          <Link to="/dashboard" className="back-link">&larr; Back to Dashboard</Link>
           <h2 style={{ marginTop: '10px' }}>Project: {project.name}</h2>
         </div>
         <span className="role-badge">{role}</span>
       </header>
 
-      {/* Task Creation Form */}
       <form className="create-project-form" onSubmit={handleCreateTask} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
         <h3>Create New Task</h3>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-          <input type="text" placeholder="Task Title" value={title} onChange={e => setTitle(e.target.value)} required />
-          <input type="text" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} required />
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+          <input style={{flex: 1}} type="text" placeholder="Task Title" value={title} onChange={e => setTitle(e.target.value)} required />
+          <input style={{flex: 2}} type="text" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} required />
           <select value={priority} onChange={e => setPriority(e.target.value)}>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
+            <option value="Low">Low Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="High">High Priority</option>
           </select>
+          <input 
+            type="date" 
+            value={dueDate} 
+            onChange={e => setDueDate(e.target.value)} 
+            title="Due Date"
+            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '6px' }}
+          />
         </div>
         
         <div style={{ display: 'flex', gap: '20px', marginBottom: '15px' }}>
@@ -150,7 +155,6 @@ const ProjectView = () => {
         <button type="submit" style={{ alignSelf: 'flex-start' }}>Add Task</button>
       </form>
 
-      
       <h3>Project Tasks</h3>
       <div className="projects-grid">
         {tasks.map(task => (
@@ -171,6 +175,11 @@ const ProjectView = () => {
                 </select>
               </p>
               <p><strong>Assigned:</strong> {task.assignedTo?.name || 'Unassigned'}</p>
+              
+              {task.dueDate && (
+                <p><strong>Due Date:</strong> <span style={{color: new Date(task.dueDate) < new Date() && task.status !== 'Done' ? 'red' : 'inherit'}}>{new Date(task.dueDate).toLocaleDateString()}</span></p>
+              )}
+
               {task.dependencies.length > 0 && (
                 <p><strong>Blocked By:</strong> {task.dependencies.map(d => d.title).join(', ')}</p>
               )}
