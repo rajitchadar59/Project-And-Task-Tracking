@@ -34,3 +34,8 @@
 *   **Chose:** Adding a `members` array containing User ObjectIds directly to the `Project` schema.
 *   **Rejected:** Creating a separate `ProjectMember` mapping/join collection (like in SQL).
 *   **Why:** MongoDB handles document arrays efficiently. A simple `members` array makes the strict visibility query (`{ members: req.userId }`) incredibly fast and straightforward without requiring complex aggregation pipelines.
+
+**8. Auto-Unassignment Logic Placement**
+*   **Chose:** Implementing the strict task unassignment logic directly inside the `updateProject` controller using `Task.updateMany`.
+*   **Rejected:** Using MongoDB database triggers or Mongoose `pre-save` middleware on the Project schema.
+*   **Why:** Middleware can make debugging difficult and hide side effects. Keeping the `$unset` query explicitly in the controller makes the business logic highly visible, easier to test, and perfectly handles the specific requirement without over-engineering.

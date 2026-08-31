@@ -20,3 +20,8 @@
 *   **Prompt 5:** "How should I structure the database in MongoDB to ensure that Members can only see projects they belong to, while Managers can see everything?"
 *   **Result:** The AI suggested adding a `members` array of ObjectIds to the Project schema and provided the Mongoose query `Project.find({ members: req.userId })`.
 *   **What I changed:** The AI's code applied the filter globally. I modified the controller logic to wrap this query strictly inside an `if (req.role === 'Member')` block, ensuring Managers automatically bypass the restriction and see all active projects as required by the assessment.
+
+**Goal: Strict Unassignment Rule**
+*   **Prompt 6:** "When a manager edits a project and removes a member, how can I automatically unassign that member from all tasks in that project in MongoDB?"
+*   **Result:** The AI suggested writing a Mongoose `post` hook that listens for project updates and fires a separate task cleanup function.
+*   **What I changed:** I rejected the `post` hook approach because hooks can become unpredictable during complex updates. Instead, I manually wrote a precise `Task.updateMany` query using the `$unset` operator directly inside my `updateProject` controller. This ensures the cleanup runs synchronously and only when the member list actually changes.

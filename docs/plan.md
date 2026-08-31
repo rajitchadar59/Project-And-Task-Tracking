@@ -20,3 +20,7 @@
 **Phase 3: Member Visibility & Assignment (Completed)**
 *   **Action:** Added a `members` array to the `Project` schema and modified the `getProjects` controller to filter results strictly based on `req.userId` for 'Member' roles.
 *   **UI Update:** Updated the Manager dashboard to fetch all users and assign them via checkboxes during project creation.
+
+**Phase 4: Project Editing, Archiving & Auto-Unassign (Completed)**
+*   **Action:** Implemented the ability for Managers to edit project details and archive projects. Archiving successfully hides them from the default active view.
+*   **Strict Rule Enforced:** Wrote logic inside the `updateProject` controller so that if a Manager removes a Member from a project, a database query automatically unassigns that user from all tasks within that specific project.
