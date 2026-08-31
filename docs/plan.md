@@ -40,3 +40,7 @@
 **Phase 8: Archived Projects View (Completed)**
 * **Action:** Implemented soft deletion (`isArchived`) for projects and created a dedicated manager dashboard for restoring them.
 * **Strict Rule Enforced:** Both the `/archived` GET route and `/restore` PATCH route are strictly protected by the `authorizeRole('Manager')` middleware.
+
+
+**Phase 9: Strict Role Deletions & Batch Operations (Completed)**
+* **Action:** Restricted task deletion strictly to Managers at the route level. Implemented Batch Update UI panel and backend logic to process tasks iteratively, isolating failures (like dependencies) while allowing successful updates to pass through. Added a native CSV export function.

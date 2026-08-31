@@ -123,4 +123,54 @@ const getGlobalTasks = async (req, res) => {
   }
 };
 
-module.exports = { createTask, getTasksByProject, updateTask, deleteTask, getGlobalTasks };
+
+const batchUpdateTasks = async (req, res) => {
+  try {
+    const { taskIds, updates } = req.body;
+    if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) {
+      return res.status(400).json({ error: 'No tasks selected' });
+    }
+
+    const results = { successful: [], failed: [] };
+
+    for (let id of taskIds) {
+      try {
+        const task = await Task.findById(id).populate('dependencies');
+        if (!task) {
+          results.failed.push({ taskId: id, title: 'Unknown', reason: 'Task not found' });
+          continue;
+        }
+
+       
+        if (updates.status === 'Done') {
+          const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
+          if (incompleteDependencies.length > 0) {
+            results.failed.push({ 
+              taskId: id, 
+              title: task.title, 
+              reason: 'Blocking tasks are not done yet' 
+            });
+            continue; 
+          }
+        }
+
+        if (updates.status) task.status = updates.status;
+        if (updates.assignedTo !== undefined) task.assignedTo = updates.assignedTo;
+
+        await task.save();
+        results.successful.push({ taskId: id, title: task.title });
+        
+      } catch (err) {
+        results.failed.push({ taskId: id, title: 'Error', reason: 'Server error on this task' });
+      }
+    }
+
+    res.status(200).json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to process batch update' });
+  }
+};
+
+
+module.exports = { createTask, getTasksByProject, updateTask, deleteTask, getGlobalTasks, batchUpdateTasks };
+

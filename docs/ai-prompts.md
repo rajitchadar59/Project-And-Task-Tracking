@@ -50,3 +50,12 @@
 *   **Prompt 10:** "How to implement an archive feature for projects instead of permanently deleting them in MongoDB?"
 *   **Result:** The AI suggested adding an `isArchived: { type: Boolean, default: false }` field to the Mongoose schema and using `findOneAndUpdate` to toggle this status.
 *   **What I changed:** I explicitly separated the retrieval logic. I updated the main `getProjects` controller to strictly filter out archived projects (`{ isArchived: false }`) for the main dashboard. Then, I built a completely separate, strictly protected Manager-only route (`/archived`) to fetch and restore hidden projects securely.
+
+
+**Goal: Strict Role Enforcement & Batch Operations**
+*   **Prompt 11:** "According to the assignment, only Managers can delete tasks. How do I enforce this?"
+    *   **Result:** The AI suggested applying the existing `authorizeRole('Manager')` middleware directly to the `router.delete('/:id')` route and conditionally rendering the Delete button in React using `role === 'Manager'`.
+*   **Prompt 12:** "How to implement batch updates for tasks where if one task fails (e.g., due to a dependency), the rest still succeed, and it reports the exact failures back to the user?"
+    *   **Result:** The AI provided a backend controller that iterates through `taskIds` using a `for...of` loop. It applies the same blocking-task logic used in single updates, capturing successful IDs in one array and failure objects (with reasons) in another, returning a combined status object to the frontend alert.
+*   **Prompt 13:** "How to export the filtered tasks to a CSV file in React without using heavy external libraries?"
+    *   **Result:** The AI generated a custom `handleExportCSV` function using a native browser `Blob`, manually mapping the task fields and escaping quotes before triggering a hidden download link.
