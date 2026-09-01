@@ -67,12 +67,23 @@
 *   **Why:** Fetching all tasks just to count them is incredibly inefficient and slows down the client. Server-side calculation ensures the frontend remains fast and only receives the exact numbers needed for Chart.js.
 
 
-## Decision 14: Audit Log Data Modeling
-- **Chose:** Embedding the `history` log array directly inside the `Task` document.
-- **Rejected:** Creating a separate `AuditLog` collection and linking it via ObjectIds.
-- **Why:** The audit timeline is tightly coupled to the task. Embedding it avoids a costly database `$lookup` (join) on every read, keeping the task detail view extremely fast.
+**14. Audit Log Data Modeling**
+* **Chose:** Embedding the `history` log array directly inside the `Task` document.
+* **Rejected:** Creating a separate `AuditLog` collection and linking it via ObjectIds.
+* **Why:** The audit timeline is tightly coupled to the task. Embedding it avoids a costly database `$lookup` (join) on every read, keeping the task detail view extremely fast.
 
-## Decision 15: Open Collaboration vs. Strict Assignment Locking
-- **Chose:** Allowing any project member to comment on or update a task, even if it is not explicitly assigned to them, while automatically logging their name in the immutable history.
-- **Rejected:** Strictly locking comments/updates so that only the `assignedTo` user can touch the task.
-- **Why:** Real-world collaboration requires unassigned members to ask questions (e.g., "When will this blocking task be done?"). The immutable audit log naturally enforces accountability without breaking collaboration.
+**15. Open Collaboration vs. Strict Assignment Locking**
+* **Chose:** Allowing any project member to comment on or update a task, even if it is not explicitly assigned to them, while automatically logging their name in the immutable history.
+* **Rejected:** Strictly locking comments/updates so that only the `assignedTo` user can touch the task.
+* **Why:** Real-world collaboration requires unassigned members to ask questions (e.g., "When will this blocking task be done?"). The immutable audit log naturally enforces accountability without breaking collaboration.
+
+
+**16. UI State Synchronization for Alerts**
+*   **Chose:** Native browser Custom DOM Events (`window.dispatchEvent` / `addEventListener`).
+*   **Rejected:** Implementing Redux or adding the alert state to the global AuthContext.
+*   **Why:** The Overdue Alert badge in the Navbar needed to update instantly when a user dismissed an alert inside a specific Project view. Using Redux for a single notification badge is massive overkill for a 12-hour project. Custom events act as a lightweight, native pub/sub system that perfectly keeps isolated React components in sync.
+
+**17. Permissive UI with Strict Auditing**
+*   **Chose:** Allowing Members to edit task details (Title, Description, Dependencies) rather than locking the 'Edit' button strictly to Managers.
+*   **Rejected:** Hard-locking task details so Members can only change Status.
+*   **Why:** The scenario requires staff to effectively manage their work. If a Member edits a task maliciously or incorrectly, Goal 9 (Immutable History) guarantees the Manager sees exactly who did it and when. Security is enforced via the immutable audit trail rather than restrictive UI friction.

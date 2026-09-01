@@ -71,3 +71,14 @@
 *   **Prompt 15:** "How to implement an immutable audit history timeline for tasks that tracks status changes, assignments, and allows users to add comments?"
     *   **Result:** The AI provided a schema update using a `history` sub-document array and updated the main `updateTask` controller to automatically push an object `{ action, details, user, date }` whenever a field difference was detected.
     *   **What I changed:** The AI applied strict authorization checks that prevented unassigned members from leaving comments. I corrected this by intentionally keeping the comment route open to all project members to allow team collaboration, relying on the immutable name-tracking to ensure accountability.
+
+
+**Goal: Real-Time UI Sync & Overdue Alerts**
+*   **Prompt 16:** "The dismiss overdue alert feature is not working properly. When I click dismiss, the button disappears from the task, but the alert badge in the navbar doesn't update or go away."
+    *   **Result:** The AI identified that the Navbar component wasn't aware of the state change in the ProjectView component. It suggested using `window.dispatchEvent(new Event('alertsUpdated'))` to trigger an instant update across the app.
+    *   **What I changed:** I integrated this native browser event listener to instantly update the Overdue Badge count without needing Redux or full page reloads. I also fixed a bug where MongoDB `ObjectId` types were strictly failing equality checks against JavaScript strings by explicitly casting them to `String()`.
+
+**Goal: Role Permissions for Task Editing**
+*   **Prompt 17:** "Should a regular member be able to edit a task? Is that mentioned in the assignment? I am wondering if members should be restricted from editing task details."
+    *   **Result:** The AI and I analyzed the brief. Goal 1 explicitly forbids members from *deleting* tasks, but does not explicitly forbid editing. 
+    *   **What I changed:** I chose to keep the 'Edit' functionality open to members so they can "move work forward" (as stated in the scenario), but heavily reinforced the backend `updateTask` controller to strictly populate and log the user's name in the Immutable Audit Log for every single field change, ensuring total accountability.

@@ -94,3 +94,11 @@ I cut "nice-to-have" features like email notifications, automated cron jobs for 
 *   **Why this order:** Built last because it requires all other task fields, status states, and user roles to be fully functional so changes can be tracked accurately.
 *   **Estimated vs Actual:** Estimated 45 mins; took 1 hour to properly format the frontend timeline UI and ensure chronological sorting.
 *   **What was cut:** At-mentions (@user) in comments to keep the scope realistic.
+
+
+
+**Phase 12: Real-time UI Sync & Audit Completeness (Completed)**
+*   **Action:** Built an inline editing form for tasks allowing updates to all fields including dependencies. Fixed backend `.populate()` queries so the Audit Log correctly displays user names instead of IDs. Implemented real-time badge syncing for overdue alert dismissals.
+*   **Why this order:** UI polishing and edge-case bug fixing can only happen after the core CRUD, Batch, and Dashboard logic is fully finalized.
+*   **Estimated vs Actual:** Estimated 1 hour; took 1.5 hours due to debugging tricky string-matching bugs with MongoDB ObjectIds inside React's `includes()` arrays.
+*   **What was cut:** Complete server-side pagination for the global list to ensure all core 10 goals were rock-solid within the time budget.
