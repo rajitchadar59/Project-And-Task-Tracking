@@ -9,7 +9,7 @@ import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import ProjectView from './pages/ProjectView';
 import GlobalTasks from './pages/GlobalTasks';
-import ArchivedProjects from './pages/ArchivedProjects'; // Naya import
+import ArchivedProjects from './pages/ArchivedProjects'; 
 import './App.css';
 
 function AppLayout() {
