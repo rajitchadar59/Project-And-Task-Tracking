@@ -9,7 +9,12 @@ const createTask = async (req, res) => {
     if (!proj) return res.status(404).json({ error: 'Project not found' });
 
     const task = await Task.create({
-      title, description, priority, dueDate, project, assignedTo, dependencies
+      title, description, priority, dueDate, project, assignedTo, dependencies,
+      history: [{
+        action: 'Created',
+        details: 'Task was created',
+        user: req.userId 
+      }]
     });
     
     res.status(201).json(task);
@@ -23,7 +28,8 @@ const getTasksByProject = async (req, res) => {
     const { projectId } = req.params;
     const tasks = await Task.find({ project: projectId })
       .populate('assignedTo', 'name email')
-      .populate('dependencies', 'title status');
+      .populate('dependencies', 'title status')
+      .populate('history.user', 'name'); 
       
     res.status(200).json(tasks);
   } catch (error) {
@@ -34,14 +40,13 @@ const getTasksByProject = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, assignedTo, title, description, dependencies } = req.body;
+    const { status, assignedTo, title, description, priority, dependencies } = req.body;
 
     const task = await Task.findById(id).populate('dependencies');
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
     if (status === 'Done') {
       const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
-      
       if (incompleteDependencies.length > 0) {
         return res.status(400).json({ 
           error: 'Cannot complete task. Dependencies are not done yet.',
@@ -50,8 +55,21 @@ const updateTask = async (req, res) => {
       }
     }
 
-    if (status) task.status = status;
-    if (assignedTo !== undefined) task.assignedTo = assignedTo;
+   
+    if (status && status !== task.status) {
+      task.history.push({ action: 'Update', details: `Status changed from ${task.status} to ${status}`, user: req.userId });
+      task.status = status;
+    }
+    if (priority && priority !== task.priority) {
+      task.history.push({ action: 'Update', details: `Priority changed from ${task.priority} to ${priority}`, user: req.userId });
+      task.priority = priority;
+    }
+    if (assignedTo !== undefined && assignedTo !== task.assignedTo?.toString()) {
+      task.history.push({ action: 'Update', details: 'Task assignment was changed', user: req.userId });
+      task.assignedTo = assignedTo;
+    }
+    
+    // Normal updates
     if (title) task.title = title;
     if (description) task.description = description;
     if (dependencies) task.dependencies = dependencies;
@@ -84,37 +102,29 @@ const getGlobalTasks = async (req, res) => {
     const { status, priority, search, sortBy, isOverdue } = req.query;
     
     let query = {};
-
-    if (req.role === 'Member') {
-      query.assignedTo = req.userId;
-    }
-
+    if (req.role === 'Member') query.assignedTo = req.userId;
     if (status) query.status = status;
     if (priority) query.priority = priority;
-
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
     }
-
-   
+    
     if (isOverdue === 'true') {
       query.dueDate = { $lt: new Date() }; 
       query.status = { $ne: 'Done' };      
     }
 
     let sortOptions = {};
-    if (sortBy === 'dueDate') {
-      sortOptions.dueDate = 1; 
-    } else {
-      sortOptions.createdAt = -1; 
-    }
+    if (sortBy === 'dueDate') sortOptions.dueDate = 1; 
+    else sortOptions.createdAt = -1; 
 
     const tasks = await Task.find(query)
       .populate('project', 'name')
       .populate('assignedTo', 'name')
+      .populate('history.user', 'name')
       .sort(sortOptions);
 
     res.status(200).json(tasks);
@@ -123,13 +133,10 @@ const getGlobalTasks = async (req, res) => {
   }
 };
 
-
 const batchUpdateTasks = async (req, res) => {
   try {
     const { taskIds, updates } = req.body;
-    if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) {
-      return res.status(400).json({ error: 'No tasks selected' });
-    }
+    if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) return res.status(400).json({ error: 'No tasks selected' });
 
     const results = { successful: [], failed: [] };
 
@@ -140,22 +147,23 @@ const batchUpdateTasks = async (req, res) => {
           results.failed.push({ taskId: id, title: 'Unknown', reason: 'Task not found' });
           continue;
         }
-
-       
+        
         if (updates.status === 'Done') {
           const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
           if (incompleteDependencies.length > 0) {
-            results.failed.push({ 
-              taskId: id, 
-              title: task.title, 
-              reason: 'Blocking tasks are not done yet' 
-            });
+            results.failed.push({ taskId: id, title: task.title, reason: 'Blocking tasks are not done yet' });
             continue; 
           }
         }
 
-        if (updates.status) task.status = updates.status;
-        if (updates.assignedTo !== undefined) task.assignedTo = updates.assignedTo;
+        if (updates.status && updates.status !== task.status) {
+          task.history.push({ action: 'Update', details: `Batch Update: Status changed to ${updates.status}`, user: req.userId });
+          task.status = updates.status;
+        }
+        if (updates.assignedTo !== undefined && updates.assignedTo !== task.assignedTo?.toString()) {
+          task.history.push({ action: 'Update', details: 'Batch Update: Assignment changed', user: req.userId });
+          task.assignedTo = updates.assignedTo;
+        }
 
         await task.save();
         results.successful.push({ taskId: id, title: task.title });
@@ -171,42 +179,28 @@ const batchUpdateTasks = async (req, res) => {
   }
 };
 
-
-
-
 const getDashboardStats = async (req, res) => {
   try {
     let query = {};
-    
-    if (req.role === 'Member') {
-      query.assignedTo = req.userId;
-    }
+    if (req.role === 'Member') query.assignedTo = req.userId;
 
     const tasks = await Task.find(query).populate('assignedTo', 'name');
-
     const now = new Date();
     const startOfThisWeek = new Date(now);
     startOfThisWeek.setDate(now.getDate() - now.getDay()); 
     startOfThisWeek.setHours(0, 0, 0, 0);
-
     const endOfThisWeek = new Date(startOfThisWeek);
     endOfThisWeek.setDate(startOfThisWeek.getDate() + 6);
     endOfThisWeek.setHours(23, 59, 59, 999);
-
     const startOf8WeeksAgo = new Date(startOfThisWeek);
     startOf8WeeksAgo.setDate(startOfThisWeek.getDate() - (7 * 7));
 
     let stats = {
-      open: 0,
-      overdue: 0,
-      dueThisWeek: 0,
-      completedThisWeek: 0,
+      open: 0, overdue: 0, dueThisWeek: 0, completedThisWeek: 0,
       byStatus: { 'To Do': 0, 'In Progress': 0, 'Done': 0 },
-      byAssignee: {},
-      completionsByWeek: {} 
+      byAssignee: {}, completionsByWeek: {} 
     };
 
-   
     for(let i = 7; i >= 0; i--) {
       let weekStart = new Date(startOfThisWeek);
       weekStart.setDate(startOfThisWeek.getDate() - (i * 7));
@@ -214,18 +208,12 @@ const getDashboardStats = async (req, res) => {
     }
 
     tasks.forEach(t => {
-     
-      if (stats.byStatus[t.status] !== undefined) {
-        stats.byStatus[t.status]++;
-      } else {
-        stats.byStatus[t.status] = 1;
-      }
+      if (stats.byStatus[t.status] !== undefined) stats.byStatus[t.status]++;
+      else stats.byStatus[t.status] = 1;
 
-     
       const assigneeName = t.assignedTo ? t.assignedTo.name : 'Unassigned';
       stats.byAssignee[assigneeName] = (stats.byAssignee[assigneeName] || 0) + 1;
 
-      // 3. Headline Numbers
       if (t.status !== 'Done') {
         stats.open++;
         if (t.dueDate) {
@@ -234,21 +222,15 @@ const getDashboardStats = async (req, res) => {
           if (due >= startOfThisWeek && due <= endOfThisWeek) stats.dueThisWeek++;
         }
       } else {
-        // We use updatedAt as a proxy for completion date
         const updated = new Date(t.updatedAt || t.createdAt);
-        if (updated >= startOfThisWeek && updated <= endOfThisWeek) {
-          stats.completedThisWeek++;
-        }
+        if (updated >= startOfThisWeek && updated <= endOfThisWeek) stats.completedThisWeek++;
         
-        // 4. Completions over last 8 weeks Chart
         if (updated >= startOf8WeeksAgo) {
           let taskWeekStart = new Date(updated);
           taskWeekStart.setDate(updated.getDate() - updated.getDay());
           taskWeekStart.setHours(0, 0, 0, 0);
           const weekKey = taskWeekStart.toLocaleDateString();
-          if (stats.completionsByWeek[weekKey] !== undefined) {
-            stats.completionsByWeek[weekKey]++;
-          }
+          if (stats.completionsByWeek[weekKey] !== undefined) stats.completionsByWeek[weekKey]++;
         }
       }
     });
@@ -259,16 +241,34 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-module.exports = { 
-  createTask, 
-  getTasksByProject, 
-  updateTask, 
-  deleteTask, 
-  getGlobalTasks, 
-  batchUpdateTasks, 
-  getDashboardStats 
+
+const addTaskComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { comment } = req.body;
+    
+    if (!comment) return res.status(400).json({ error: 'Comment text is required' });
+
+    const task = await Task.findById(id);
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+
+    task.history.push({
+      action: 'Comment',
+      details: comment,
+      user: req.userId
+    });
+
+    await task.save();
+    
+
+    const populatedTask = await Task.findById(id).populate('history.user', 'name');
+    res.status(200).json(populatedTask);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
 };
 
-
-
-
+module.exports = { 
+  createTask, getTasksByProject, updateTask, deleteTask, 
+  getGlobalTasks, batchUpdateTasks, getDashboardStats, addTaskComment 
+};

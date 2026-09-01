@@ -23,10 +23,16 @@ const taskSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User' 
   },
-  
   dependencies: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Task' 
+  }],
+
+  history: [{
+    action: { type: String, required: true }, 
+    details: { type: String, required: true }, 
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    date: { type: Date, default: Date.now }
   }]
 }, { timestamps: true });
 
