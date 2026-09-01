@@ -7,7 +7,8 @@ const {
   getGlobalTasks, 
   batchUpdateTasks,
   getDashboardStats,
-  addTaskComment 
+  addTaskComment,
+  dismissAlert 
 } = require('../controllers/taskController');
 const { authMiddleware, authorizeRole } = require('../middleware/authMiddleware');
 
@@ -23,6 +24,7 @@ router.get('/project/:projectId', getTasksByProject);
 router.patch('/batch', batchUpdateTasks);
 router.patch('/:id', updateTask);
 router.post('/:id/comments', addTaskComment);
+router.post('/:id/dismiss-alert', dismissAlert); 
 router.delete('/:id', authorizeRole('Manager'), deleteTask);
 
 module.exports = router;

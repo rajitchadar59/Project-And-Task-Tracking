@@ -3,21 +3,27 @@ const Project = require('../models/Project');
 
 const createTask = async (req, res) => {
   try {
-    const { title, description, priority, dueDate, project, assignedTo, dependencies } = req.body;
+    let { title, description, priority, dueDate, project, assignedTo, dependencies } = req.body;
     
+    if (assignedTo && !Array.isArray(assignedTo)) {
+      assignedTo = [assignedTo];
+    }
+
     const proj = await Project.findById(project);
     if (!proj) return res.status(404).json({ error: 'Project not found' });
 
     const task = await Task.create({
       title, description, priority, dueDate, project, assignedTo, dependencies,
-      history: [{
-        action: 'Created',
-        details: 'Task was created',
-        user: req.userId 
-      }]
+      history: [{ action: 'Created', details: 'Task was created', user: req.userId }]
     });
     
-    res.status(201).json(task);
+    // FIXED: Populate dependencies and history so it doesn't break the frontend state on first create
+    const populatedTask = await Task.findById(task._id)
+      .populate('assignedTo', 'name email')
+      .populate('dependencies', 'title status')
+      .populate('history.user', 'name');
+
+    res.status(201).json(populatedTask);
   } catch (error) {
     res.status(400).json({ error: 'Failed to create task' });
   }
@@ -40,42 +46,101 @@ const getTasksByProject = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, assignedTo, title, description, priority, dependencies } = req.body;
+    let { status, assignedTo, title, description, priority, dependencies, dueDate } = req.body;
 
     const task = await Task.findById(id).populate('dependencies');
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
-    if (status === 'Done') {
-      const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
-      if (incompleteDependencies.length > 0) {
-        return res.status(400).json({ 
-          error: 'Cannot complete task. Dependencies are not done yet.',
-          blockingTasks: incompleteDependencies.map(t => t.title)
-        });
-      }
-    }
-
-   
     if (status && status !== task.status) {
+      if (status === 'Blocked') {
+        if (task.status !== 'In Progress' && task.status !== 'In Review') {
+          return res.status(400).json({ error: 'Can only block tasks from In Progress or In Review' });
+        }
+        task.previousStatus = task.status;
+      } 
+      else if (task.status === 'Blocked') {
+        if (status !== task.previousStatus) {
+          return res.status(400).json({ error: `Unblocking must return task to ${task.previousStatus}` });
+        }
+        task.previousStatus = null;
+      } 
+      else if (status === 'Done') {
+        if (task.status !== 'In Review') {
+          return res.status(400).json({ error: 'Task must be In Review before moving to Done' });
+        }
+        const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
+        if (incompleteDependencies.length > 0) {
+          return res.status(400).json({ 
+            error: 'Cannot complete task. Dependencies are not done yet.',
+            blockingTasks: incompleteDependencies.map(t => t.title)
+          });
+        }
+      } 
+      else if (status === 'In Progress') {
+        if (task.status !== 'Backlog' && task.status !== 'Done') {
+          return res.status(400).json({ error: 'Invalid move. Can only move to In Progress from Backlog or reopened from Done.' });
+        }
+      } 
+      else if (status === 'In Review') {
+        if (task.status !== 'In Progress' && task.status !== 'Done') {
+          return res.status(400).json({ error: 'Invalid move. Can only move to In Review from In Progress or reopened from Done.' });
+        }
+      } 
+      else if (status === 'Backlog') {
+        if (task.status !== 'Done') {
+          return res.status(400).json({ error: 'Invalid move. Cannot move backwards to Backlog unless reopening.' });
+        }
+      }
+
       task.history.push({ action: 'Update', details: `Status changed from ${task.status} to ${status}`, user: req.userId });
       task.status = status;
     }
+
+    if (dueDate !== undefined) {
+       // Convert both to comparable string format YYYY-MM-DD to avoid time zone mismatches
+       const oldDateStr = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '';
+       const newDateStr = dueDate ? new Date(dueDate).toISOString().split('T')[0] : '';
+       
+       if (oldDateStr !== newDateStr) {
+          task.history.push({ action: 'Update', details: `Due date changed`, user: req.userId });
+          task.dueDate = dueDate || null;
+          task.dismissedBy = []; // Reset alert dismissals because date changed
+       }
+    }
+
+    if (assignedTo !== undefined) {
+      if (!Array.isArray(assignedTo)) assignedTo = [assignedTo];
+      task.history.push({ action: 'Update', details: 'Task assignments were updated', user: req.userId });
+      task.assignedTo = assignedTo;
+    }
+    
     if (priority && priority !== task.priority) {
       task.history.push({ action: 'Update', details: `Priority changed from ${task.priority} to ${priority}`, user: req.userId });
       task.priority = priority;
     }
-    if (assignedTo !== undefined && assignedTo !== task.assignedTo?.toString()) {
-      task.history.push({ action: 'Update', details: 'Task assignment was changed', user: req.userId });
-      task.assignedTo = assignedTo;
-    }
     
-    // Normal updates
-    if (title) task.title = title;
-    if (description) task.description = description;
-    if (dependencies) task.dependencies = dependencies;
+    if (title && title !== task.title) {
+        task.history.push({ action: 'Update', details: 'Title updated', user: req.userId });
+        task.title = title;
+    }
+    if (description && description !== task.description) {
+        task.history.push({ action: 'Update', details: 'Description updated', user: req.userId });
+        task.description = description;
+    }
+    if (dependencies) {
+        task.history.push({ action: 'Update', details: 'Dependencies updated', user: req.userId });
+        task.dependencies = dependencies;
+    }
 
     await task.save();
-    res.status(200).json(task);
+    
+    // FIXED: Return populated task back to frontend so state isn't replaced with raw IDs
+    const updatedPopulatedTask = await Task.findById(id)
+        .populate('assignedTo', 'name email')
+        .populate('dependencies', 'title status')
+        .populate('history.user', 'name');
+
+    res.status(200).json(updatedPopulatedTask);
   } catch (error) {
     res.status(400).json({ error: 'Failed to update task' });
   }
@@ -85,12 +150,7 @@ const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
     await Task.findByIdAndDelete(id);
-    
-    await Task.updateMany(
-      { dependencies: id },
-      { $pull: { dependencies: id } }
-    );
-
+    await Task.updateMany({ dependencies: id }, { $pull: { dependencies: id } });
     res.status(200).json({ message: 'Task deleted successfully' });
   } catch (error) {
     res.status(400).json({ error: 'Failed to delete task' });
@@ -102,7 +162,7 @@ const getGlobalTasks = async (req, res) => {
     const { status, priority, search, sortBy, isOverdue } = req.query;
     
     let query = {};
-    if (req.role === 'Member') query.assignedTo = req.userId;
+    if (req.role === 'Member') query.assignedTo = req.userId; // Matches automatically inside array in MongoDB
     if (status) query.status = status;
     if (priority) query.priority = priority;
     if (search) {
@@ -147,22 +207,38 @@ const batchUpdateTasks = async (req, res) => {
           results.failed.push({ taskId: id, title: 'Unknown', reason: 'Task not found' });
           continue;
         }
-        
-        if (updates.status === 'Done') {
-          const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
-          if (incompleteDependencies.length > 0) {
-            results.failed.push({ taskId: id, title: task.title, reason: 'Blocking tasks are not done yet' });
-            continue; 
-          }
-        }
 
         if (updates.status && updates.status !== task.status) {
-          task.history.push({ action: 'Update', details: `Batch Update: Status changed to ${updates.status}`, user: req.userId });
-          task.status = updates.status;
+            if (updates.status === 'Done' && task.status !== 'In Review') {
+                results.failed.push({ taskId: id, title: task.title, reason: 'Must be In Review first' });
+                continue;
+            }
+            if (updates.status === 'Done') {
+                const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
+                if (incompleteDependencies.length > 0) {
+                    results.failed.push({ taskId: id, title: task.title, reason: 'Dependencies not done' });
+                    continue; 
+                }
+            }
+            task.history.push({ action: 'Update', details: `Batch: Status changed to ${updates.status}`, user: req.userId });
+            task.status = updates.status;
         }
-        if (updates.assignedTo !== undefined && updates.assignedTo !== task.assignedTo?.toString()) {
-          task.history.push({ action: 'Update', details: 'Batch Update: Assignment changed', user: req.userId });
-          task.assignedTo = updates.assignedTo;
+
+        if (updates.dueDate !== undefined) {
+             const oldDateStr = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '';
+             const newDateStr = updates.dueDate ? new Date(updates.dueDate).toISOString().split('T')[0] : '';
+             
+             if(oldDateStr !== newDateStr){
+                 task.dueDate = updates.dueDate || null;
+                 task.dismissedBy = [];
+                 task.history.push({ action: 'Update', details: 'Batch: Due date changed', user: req.userId });
+             }
+        }
+
+        if (updates.assignedTo !== undefined) {
+          let newAssignees = Array.isArray(updates.assignedTo) ? updates.assignedTo : [updates.assignedTo];
+          task.history.push({ action: 'Update', details: 'Batch: Assignment changed', user: req.userId });
+          task.assignedTo = newAssignees;
         }
 
         await task.save();
@@ -197,7 +273,7 @@ const getDashboardStats = async (req, res) => {
 
     let stats = {
       open: 0, overdue: 0, dueThisWeek: 0, completedThisWeek: 0,
-      byStatus: { 'To Do': 0, 'In Progress': 0, 'Done': 0 },
+      byStatus: { 'Backlog': 0, 'In Progress': 0, 'In Review': 0, 'Done': 0, 'Blocked': 0 },
       byAssignee: {}, completionsByWeek: {} 
     };
 
@@ -211,8 +287,13 @@ const getDashboardStats = async (req, res) => {
       if (stats.byStatus[t.status] !== undefined) stats.byStatus[t.status]++;
       else stats.byStatus[t.status] = 1;
 
-      const assigneeName = t.assignedTo ? t.assignedTo.name : 'Unassigned';
-      stats.byAssignee[assigneeName] = (stats.byAssignee[assigneeName] || 0) + 1;
+      if (t.assignedTo && t.assignedTo.length > 0) {
+        t.assignedTo.forEach(user => {
+          stats.byAssignee[user.name] = (stats.byAssignee[user.name] || 0) + 1;
+        });
+      } else {
+        stats.byAssignee['Unassigned'] = (stats.byAssignee['Unassigned'] || 0) + 1;
+      }
 
       if (t.status !== 'Done') {
         stats.open++;
@@ -241,7 +322,6 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-
 const addTaskComment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -252,15 +332,9 @@ const addTaskComment = async (req, res) => {
     const task = await Task.findById(id);
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
-    task.history.push({
-      action: 'Comment',
-      details: comment,
-      user: req.userId
-    });
-
+    task.history.push({ action: 'Comment', details: comment, user: req.userId });
     await task.save();
     
-
     const populatedTask = await Task.findById(id).populate('history.user', 'name');
     res.status(200).json(populatedTask);
   } catch (error) {
@@ -268,7 +342,23 @@ const addTaskComment = async (req, res) => {
   }
 };
 
+const dismissAlert = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const task = await Task.findById(id);
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+
+    if (!task.dismissedBy.includes(req.userId)) {
+      task.dismissedBy.push(req.userId);
+      await task.save();
+    }
+    res.status(200).json({ message: 'Alert dismissed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to dismiss alert' });
+  }
+};
+
 module.exports = { 
   createTask, getTasksByProject, updateTask, deleteTask, 
-  getGlobalTasks, batchUpdateTasks, getDashboardStats, addTaskComment 
+  getGlobalTasks, batchUpdateTasks, getDashboardStats, addTaskComment, dismissAlert 
 };
