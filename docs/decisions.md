@@ -65,3 +65,14 @@
 *   **Chose:** Aggregating all dashboard statistics (open counts, overdue, chart distributions) in a single backend controller (`/stats`) and passing a formatted JSON object to the frontend.
 *   **Rejected:** Fetching all raw tasks to the frontend and calculating the stats using JavaScript array methods in React.
 *   **Why:** Fetching all tasks just to count them is incredibly inefficient and slows down the client. Server-side calculation ensures the frontend remains fast and only receives the exact numbers needed for Chart.js.
+
+
+## Decision 14: Audit Log Data Modeling
+- **Chose:** Embedding the `history` log array directly inside the `Task` document.
+- **Rejected:** Creating a separate `AuditLog` collection and linking it via ObjectIds.
+- **Why:** The audit timeline is tightly coupled to the task. Embedding it avoids a costly database `$lookup` (join) on every read, keeping the task detail view extremely fast.
+
+## Decision 15: Open Collaboration vs. Strict Assignment Locking
+- **Chose:** Allowing any project member to comment on or update a task, even if it is not explicitly assigned to them, while automatically logging their name in the immutable history.
+- **Rejected:** Strictly locking comments/updates so that only the `assignedTo` user can touch the task.
+- **Why:** Real-world collaboration requires unassigned members to ask questions (e.g., "When will this blocking task be done?"). The immutable audit log naturally enforces accountability without breaking collaboration.

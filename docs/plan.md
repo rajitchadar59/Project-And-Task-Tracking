@@ -87,3 +87,10 @@ I cut "nice-to-have" features like email notifications, automated cron jobs for 
 *   **Why this order:** Analytics require existing tasks, due dates, and completion statuses to render meaningful charts.
 *   **Estimated vs Actual:** Estimated 1 hour; took 1.5 hours to properly format the 8-week timeline array logic.
 *   **What was cut:** Interactive chart drill-downs (e.g., clicking a pie slice to filter a list).
+
+
+**Phase 11: Immutable Audit History & Comments (Completed)**
+*   **Action:** Added a `history` array to the `Task` schema. Intercepted updates in the `updateTask` controller to push automatic, read-only logs (e.g., status changes). Built a `/comments` route for user notes.
+*   **Why this order:** Built last because it requires all other task fields, status states, and user roles to be fully functional so changes can be tracked accurately.
+*   **Estimated vs Actual:** Estimated 45 mins; took 1 hour to properly format the frontend timeline UI and ensure chronological sorting.
+*   **What was cut:** At-mentions (@user) in comments to keep the scope realistic.

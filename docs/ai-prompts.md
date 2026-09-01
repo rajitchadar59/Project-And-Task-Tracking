@@ -65,3 +65,9 @@
 *   **Prompt 14:** "How to build a dashboard with headline stats and visual charts for task distribution and 8-week completion trends?"
     *   **Result:** The AI provided a backend `/stats` controller to aggregate data using standard date manipulation, and a frontend integration using `react-chartjs-2` to render Doughnut, Bar, and Line charts.
     *   **What I changed:** The AI's base code aggregated all tasks globally. I explicitly intercepted the database query at the top of the controller and injected a role-based security filter (`if (req.role === 'Member') query.assignedTo = req.userId;`). This ensures that standard members only see charts and statistics for tasks assigned to them, maintaining strict data isolation.
+
+
+**Goal: Task Audit History & Immutable Timelines**
+*   **Prompt 15:** "How to implement an immutable audit history timeline for tasks that tracks status changes, assignments, and allows users to add comments?"
+    *   **Result:** The AI provided a schema update using a `history` sub-document array and updated the main `updateTask` controller to automatically push an object `{ action, details, user, date }` whenever a field difference was detected.
+    *   **What I changed:** The AI applied strict authorization checks that prevented unassigned members from leaving comments. I corrected this by intentionally keeping the comment route open to all project members to allow team collaboration, relying on the immutable name-tracking to ensure accountability.
