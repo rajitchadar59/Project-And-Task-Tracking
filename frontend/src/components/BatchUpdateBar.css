@@ -1,14 +1,19 @@
+/* src/components/BatchUpdateBar.css */
 .batch-bar-overlay {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
-  border-top: 1px solid #e4e4e4;
-  box-shadow: 0 -10px 40px rgba(0,0,0,0.08);
-  padding: 16px 24px;
+  background: #f44a69 !important; /* MAGIC FIX: Force Pink Background */
+  box-shadow: 0 -8px 32px rgba(255, 56, 92, 0.25);
+  padding: 20px 24px;
   z-index: 1000;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.batch-bar-overlay * {
+  box-sizing: border-box;
 }
 
 @keyframes slideUp {
@@ -16,13 +21,22 @@
   to { transform: translateY(0); }
 }
 
+.fade-in {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .batch-bar-content {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
@@ -30,42 +44,73 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .batch-count {
-  background: #222222;
-  color: #ffffff;
+  background: #ffffff !important;
+  color: #ff385c !important;
   width: 32px;
   height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .batch-text {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: #222222;
+  color: #ffffff !important;
+  letter-spacing: 0.3px;
 }
 
 .batch-controls {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex: 1;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .batch-select {
-  padding: 10px 16px;
-  border: 1px solid #d1d1d1;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 12px 16px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  font-size: 14.5px;
   outline: none;
-  min-width: 180px;
+  min-width: 200px;
+  background: #ffffff;
+  color: #222222;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.batch-select:focus {
+  border-color: #222222;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.batch-select.primary-select {
+  background: #f7f7f7;
+}
+
+/* Calendar icon styling for visibility */
+.batch-select[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.batch-select[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .batch-dropdown-wrapper {
@@ -77,38 +122,107 @@
   position: absolute;
   bottom: 100%;
   left: 0;
-  margin-bottom: 8px;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  margin-bottom: 12px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  z-index: 1010;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e4e4e4;
+  overflow: hidden;
 }
 
 .batch-actions {
   display: flex;
   gap: 12px;
+  flex-shrink: 0;
 }
 
+/* Apply Button - Dark contrast against pink */
 .btn-batch-apply {
-  background: #ff385c;
-  color: #ffffff;
+  background: #222222 !important;
+  color: #ffffff !important;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 28px;
   border-radius: 999px;
   font-size: 14.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.btn-batch-apply:hover { background: #d93a5c; }
+.btn-batch-apply:hover {
+  background: #000000 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
 
+/* Cancel Button - Transparent white */
 .btn-batch-clear {
-  background: #ffffff;
-  color: #222222;
-  border: 1px solid #d1d1d1;
-  padding: 10px 20px;
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+  padding: 12px 24px;
   border-radius: 999px;
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.btn-batch-clear:hover { background: #f7f7f7; }
+.btn-batch-clear:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: #ffffff !important;
+}
+
+@media (max-width: 900px) {
+  .batch-bar-overlay {
+    padding: 16px;
+  }
+  
+  .batch-bar-content {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .batch-info {
+    justify-content: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    width: 100%;
+  }
+  
+  .batch-controls {
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .batch-select, .batch-dropdown-wrapper {
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  .batch-dropdown-wrapper .select-box {
+    position: relative;
+    bottom: auto;
+    margin-bottom: 0;
+    margin-top: 8px;
+  }
+  
+  .batch-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  
+  .btn-batch-apply, .btn-batch-clear {
+    width: 100%;
+    text-align: center;
+    padding: 14px 16px;
+  }
+}

@@ -28,9 +28,11 @@ const ProjectView = () => {
     title: '', description: '', priority: 'Medium', dueDate: '', assignedTo: [], dependencies: []
   });
 
+  // BATCH UPDATE STATES
   const [selectedBatchTasks, setSelectedBatchTasks] = useState([]);
   const [batchStatus, setBatchStatus] = useState('');
   const [batchAssignees, setBatchAssignees] = useState([]); 
+  const [batchDueDate, setBatchDueDate] = useState(''); 
 
   const [openTimelines, setOpenTimelines] = useState([]);
   const [comments, setComments] = useState({});
@@ -130,20 +132,106 @@ const ProjectView = () => {
     setSelectedBatchTasks(prev => prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]);
   };
 
+  // ✅ MAGIC FIX: Fully Detailed Custom Toast Logic 
   const handleBatchUpdate = async () => {
     if (selectedBatchTasks.length === 0) return;
+    
     const updates = {};
-    if (batchStatus) updates.status = batchStatus;
-    if (batchAssignees.length > 0) updates.assignedTo = batchAssignees;
+    let updateLabel = "";
+
+    // Find out exactly what is being updated to display in the success toast
+    if (batchStatus) {
+      updates.status = batchStatus;
+      updateLabel = `Status ➔ ${batchStatus}`;
+    } else if (batchAssignees.length > 0) {
+      updates.assignedTo = batchAssignees;
+      const assigneeNames = project?.members
+        ?.filter(m => batchAssignees.includes(m._id))
+        .map(m => m.name).join(', ') || "New Assignees";
+      updateLabel = `Assigned ➔ ${assigneeNames}`;
+    } else if (batchDueDate) {
+      updates.dueDate = batchDueDate;
+      updateLabel = `Due Date ➔ ${new Date(batchDueDate).toLocaleDateString()}`;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      toast.error("Please provide a new value for the update.");
+      return;
+    }
 
     try {
       const { data } = await axios.patch('/tasks/batch', { taskIds: selectedBatchTasks, updates });
-      toast.success(`Updated: ${data.successful.length}, Failed: ${data.failed.length}`);
-      setSelectedBatchTasks([]); setBatchStatus(''); setBatchAssignees([]);
+      
+      const successCount = data.successful ? data.successful.length : 0;
+      const failCount = data.failed ? data.failed.length : 0;
+      
+      // Detailed Custom Toast Rendering
+      toast((t) => (
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+          
+          {/* Header with Close Button */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e4e4e4', paddingBottom: '8px' }}>
+            <strong style={{ fontSize: '15px', color: '#111827' }}>Batch Update Results</strong>
+            <button 
+              onClick={() => toast.dismiss(t.id)}
+              style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#6b7280', padding: '0 4px', lineHeight: '1' }}
+            >
+              ✕
+            </button>
+          </div>
+          
+          {/* Scrollable Results Area */}
+          <div style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '8px' }}>
+            
+            {/* SUCCESS SECTION */}
+            {successCount > 0 && (
+              <div style={{ marginBottom: failCount > 0 ? '16px' : '0' }}>
+                <strong style={{ color: '#059669', fontSize: '14px', display: 'block', marginBottom: '10px' }}>
+                  ✓ Successfully Updated ({successCount})
+                </strong>
+                {data.successful.map((s, i) => (
+                  <div key={`s-${i}`} style={{ marginBottom: '10px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>{s.title}</div>
+                    <div style={{ fontSize: '13px', color: '#059669', paddingLeft: '12px', borderLeft: '2px solid #34d399', marginTop: '3px' }}>
+                      {updateLabel}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* FAILURE SECTION */}
+            {failCount > 0 && (
+              <div>
+                <strong style={{ color: '#e11d48', fontSize: '14px', display: 'block', marginBottom: '10px' }}>
+                  ✗ Failed Updates ({failCount})
+                </strong>
+                {data.failed.map((f, i) => (
+                  <div key={`f-${i}`} style={{ marginBottom: '10px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>{f.title}</div>
+                    <div style={{ fontSize: '13px', color: '#e11d48', paddingLeft: '12px', borderLeft: '2px solid #fb7185', marginTop: '3px', lineHeight: '1.4' }}>
+                      {f.reason}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ), { 
+        duration: 12000, 
+        style: { minWidth: '350px', maxWidth: '450px', padding: '16px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' } 
+      });
+
+      // Clear all states
+      setSelectedBatchTasks([]); 
+      setBatchStatus(''); 
+      setBatchAssignees([]); 
+      setBatchDueDate('');
       fetchTasks();
       window.dispatchEvent(new Event('alertsUpdated'));
     } catch (err) {
-      toast.error('Failed to process batch update.');
+      toast.error('Failed to process batch update. Server error.');
     }
   };
 
@@ -233,9 +321,10 @@ const ProjectView = () => {
         selectedCount={selectedBatchTasks.length}
         batchStatus={batchStatus} setBatchStatus={setBatchStatus}
         batchAssignees={batchAssignees} setBatchAssignees={setBatchAssignees}
+        batchDueDate={batchDueDate} setBatchDueDate={setBatchDueDate} 
         projectMembers={project.members} role={role}
         onApply={handleBatchUpdate}
-        onClear={() => { setSelectedBatchTasks([]); setBatchAssignees([]); setBatchStatus(''); }}
+        onClear={() => { setSelectedBatchTasks([]); setBatchAssignees([]); setBatchStatus(''); setBatchDueDate(''); }}
       />
     </div>
   );

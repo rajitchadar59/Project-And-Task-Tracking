@@ -196,7 +196,9 @@ const getGlobalTasks = async (req, res) => {
 const batchUpdateTasks = async (req, res) => {
   try {
     const { taskIds, updates } = req.body;
-    if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) return res.status(400).json({ error: 'No tasks selected' });
+    if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) {
+      return res.status(400).json({ error: 'No tasks selected' });
+    }
 
     const results = { successful: [], failed: [] };
 
@@ -208,39 +210,96 @@ const batchUpdateTasks = async (req, res) => {
           continue;
         }
 
+        
         if (updates.status && updates.status !== task.status) {
-            if (updates.status === 'Done' && task.status !== 'In Review') {
-                results.failed.push({ taskId: id, title: task.title, reason: 'Must be In Review first' });
-                continue;
+          const status = updates.status;
+          let isValidMove = true;
+          let failReason = '';
+
+       
+          if (status === 'Blocked') {
+            if (task.status !== 'In Progress' && task.status !== 'In Review') {
+              isValidMove = false;
+              failReason = 'Can only block tasks from In Progress or In Review.';
+            } else {
+              task.previousStatus = task.status;
             }
-            if (updates.status === 'Done') {
-                const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
-                if (incompleteDependencies.length > 0) {
-                    results.failed.push({ taskId: id, title: task.title, reason: 'Dependencies not done' });
-                    continue; 
-                }
+          } 
+         
+          else if (task.status === 'Blocked') {
+            if (status !== task.previousStatus) {
+              isValidMove = false;
+              failReason = `Unblocking must return task strictly to ${task.previousStatus}.`;
+            } else {
+              task.previousStatus = null;
             }
-            task.history.push({ action: 'Update', details: `Batch: Status changed to ${updates.status}`, user: req.userId });
-            task.status = updates.status;
+          } 
+      
+          else if (status === 'Done') {
+            if (task.status !== 'In Review') {
+              isValidMove = false;
+              failReason = 'Task must be In Review before moving to Done.';
+            } else {
+              const incompleteDependencies = task.dependencies.filter(dep => dep.status !== 'Done');
+              if (incompleteDependencies.length > 0) {
+                isValidMove = false;
+                failReason = `Cannot complete task. Blocking dependencies: ${incompleteDependencies.map(t=>t.title).join(', ')}.`;
+              }
+            }
+          } 
+    
+          else if (status === 'In Progress') {
+            if (task.status !== 'Backlog' && task.status !== 'Done') {
+              isValidMove = false;
+              failReason = 'Can only move to In Progress from Backlog or when reopening from Done.';
+            }
+          } 
+         
+          else if (status === 'In Review') {
+            if (task.status !== 'In Progress' && task.status !== 'Done') {
+              isValidMove = false;
+              failReason = 'Can only move to In Review from In Progress or when reopening from Done.';
+            }
+          } 
+       
+          else if (status === 'Backlog') {
+            if (task.status !== 'Done') {
+              isValidMove = false;
+              failReason = 'Cannot move backwards to Backlog unless reopening a completed task from Done.';
+            }
+          }
+
+
+          if (!isValidMove) {
+            results.failed.push({ taskId: id, title: task.title, reason: failReason });
+            continue; // Move to the next task in the loop
+          }
+
+   
+          task.history.push({ action: 'Update', details: `Batch: Status changed from ${task.status} to ${status}`, user: req.userId });
+          task.status = status;
         }
 
+      
         if (updates.dueDate !== undefined) {
              const oldDateStr = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '';
              const newDateStr = updates.dueDate ? new Date(updates.dueDate).toISOString().split('T')[0] : '';
              
-             if(oldDateStr !== newDateStr){
+             if (oldDateStr !== newDateStr) {
                  task.dueDate = updates.dueDate || null;
-                 task.dismissedBy = [];
+                 task.dismissedBy = []; // Nayi due date aane par purane alerts reset hote hain
                  task.history.push({ action: 'Update', details: 'Batch: Due date changed', user: req.userId });
              }
         }
 
+       
         if (updates.assignedTo !== undefined) {
           let newAssignees = Array.isArray(updates.assignedTo) ? updates.assignedTo : [updates.assignedTo];
           task.history.push({ action: 'Update', details: 'Batch: Assignment changed', user: req.userId });
           task.assignedTo = newAssignees;
         }
 
+       
         await task.save();
         results.successful.push({ taskId: id, title: task.title });
         
@@ -249,6 +308,7 @@ const batchUpdateTasks = async (req, res) => {
       }
     }
 
+   
     res.status(200).json(results);
   } catch (error) {
     res.status(500).json({ error: 'Failed to process batch update' });

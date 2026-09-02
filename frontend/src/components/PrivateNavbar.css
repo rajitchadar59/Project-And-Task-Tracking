@@ -268,7 +268,7 @@
   transform: translateY(-7px) rotate(-45deg);
 }
 
-@media (max-width: 850px) {
+@media (max-width: 905px) {
   .private-nav-actions-desktop .private-role-badge-desktop,
   .private-nav-actions-desktop .private-nav-btn-logout {
     display: none;
