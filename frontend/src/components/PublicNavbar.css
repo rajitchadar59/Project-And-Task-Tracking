@@ -3,9 +3,7 @@
   top: 0;
   z-index: 20;
   background: #ffffff;
-  border-bottom: 1px solid #e4e4e4;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  
+  border-bottom: 1px solid #e4e4e4; 
 }
 
 .public-nav * {
@@ -49,10 +47,11 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 9px;
+  border-radius: 15px;
   background: #ff385c;
   color: #ffffff;
-  font-size: 16px;
+  font-size: 14px;
+  padding: 1rem;
 }
 
 .nav-links {
@@ -129,7 +128,7 @@
   transform: translateY(-7px) rotate(-45deg);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 690px) {
   .nav-toggle {
     display: flex;
   }

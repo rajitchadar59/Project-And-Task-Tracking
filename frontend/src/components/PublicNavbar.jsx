@@ -20,7 +20,7 @@ const PublicNavbar = () => {
             Sign In
           </Link>
           <Link
-            to="/auth"
+            to="/auth?mode=signup"
             className="nav-btn-primary"
             onClick={() => setMenuOpen(false)}
           >

@@ -279,8 +279,8 @@ export default function Home() {
       <footer className="home-footer">
         <div className="home-footer-top">
           <div className="home-footer-brand">
-            <span className="home-logo-mark">T</span>
-            <span>TaskFlow</span>
+            <span className="home-logo-mark">PTT</span>
+            <span>Project Task Tracker</span>
             <p>Built for teams running more than one client project at a time.</p>
           </div>
 

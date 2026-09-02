@@ -15,8 +15,6 @@
   --home-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   --home-max-width: 1320px;
 
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
 
   color: var(--home-ink);
   background: var(--home-white);
@@ -449,10 +447,11 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 9px;
-  background: var(--home-primary);
-  color: var(--home-white);
-  font-size: 16px;
+  border-radius: 15px;
+  background: #ff385c;
+  color: #ffffff;
+  font-size: 14px;
+  padding: 1rem;
 }
 
 .home-footer-brand span:last-of-type {

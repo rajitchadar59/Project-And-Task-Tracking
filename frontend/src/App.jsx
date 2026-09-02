@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import ProjectView from './pages/ProjectView';
 import GlobalTasks from './pages/GlobalTasks';
 import ArchivedProjects from './pages/ArchivedProjects'; 
+import { Toaster } from 'react-hot-toast';
 import './App.css';
 
 function AppLayout() {
@@ -18,6 +19,7 @@ function AppLayout() {
   return (
     <div className="app-container">
       {token ? <PrivateNavbar /> : <PublicNavbar />}
+      <Toaster position="top-center" reverseOrder={false} />
 
       <Routes>
         <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Home />} />
