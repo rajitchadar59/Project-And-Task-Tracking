@@ -1,0 +1,114 @@
+.batch-bar-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid #e4e4e4;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.08);
+  padding: 16px 24px;
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.batch-bar-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.batch-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.batch-count {
+  background: #222222;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.batch-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #222222;
+}
+
+.batch-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  justify-content: center;
+}
+
+.batch-select {
+  padding: 10px 16px;
+  border: 1px solid #d1d1d1;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  min-width: 180px;
+}
+
+.batch-dropdown-wrapper {
+  position: relative;
+  width: 240px;
+}
+
+.batch-dropdown-wrapper .select-box {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+
+.batch-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-batch-apply {
+  background: #ff385c;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-batch-apply:hover { background: #d93a5c; }
+
+.btn-batch-clear {
+  background: #ffffff;
+  color: #222222;
+  border: 1px solid #d1d1d1;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-batch-clear:hover { background: #f7f7f7; }

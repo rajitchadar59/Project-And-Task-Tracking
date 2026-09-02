@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from '../axiosPatch';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 import './GlobalTasks.css';
 
 const GlobalTasks = () => {
@@ -14,7 +15,6 @@ const GlobalTasks = () => {
   const [sortBy, setSortBy] = useState('createdAt'); 
   const [isOverdue, setIsOverdue] = useState(false); 
 
-  // Batch Update State
   const [selectedBatchTasks, setSelectedBatchTasks] = useState([]);
   const [batchStatus, setBatchStatus] = useState('');
 
@@ -30,7 +30,7 @@ const GlobalTasks = () => {
       const { data } = await axios.get('/tasks/global', { params });
       setTasks(data);
     } catch (err) {
-      console.error('Error fetching global tasks');
+      toast.error('Error fetching global tasks');
     }
   };
 
@@ -43,10 +43,9 @@ const GlobalTasks = () => {
     fetchTasks();
   };
 
-  // --- CSV Export Logic ---
   const handleExportCSV = () => {
     if (tasks.length === 0) {
-      alert("No tasks to export.");
+      toast.error("No tasks to export.");
       return;
     }
 
@@ -56,7 +55,7 @@ const GlobalTasks = () => {
     tasks.forEach(t => {
       const row = [
         `"${t.project?.name || ''}"`,
-        `"${t.title.replace(/"/g, '""')}"`, // Escape quotes
+        `"${t.title.replace(/"/g, '""')}"`, 
         `"${t.description.replace(/"/g, '""')}"`,
         `"${t.priority}"`,
         `"${t.status}"`,
@@ -75,9 +74,9 @@ const GlobalTasks = () => {
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
+    toast.success("CSV Exported successfully");
   };
 
-  // --- Batch Update Logic ---
   const toggleBatchTask = (taskId) => {
     setSelectedBatchTasks(prev => 
       prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
@@ -86,7 +85,7 @@ const GlobalTasks = () => {
 
   const handleBatchUpdate = async () => {
     if (selectedBatchTasks.length === 0) return;
-    if (!batchStatus) return alert('Please select a new status to apply.');
+    if (!batchStatus) return toast.error('Please select a new status to apply.');
 
     try {
       const { data } = await axios.patch('/tasks/batch', {
@@ -94,140 +93,178 @@ const GlobalTasks = () => {
         updates: { status: batchStatus }
       });
 
-      let alertMsg = `Batch Update Complete!\n\nSuccessful: ${data.successful.length}\nFailed: ${data.failed.length}`;
       if (data.failed.length > 0) {
-        alertMsg += `\n\nFailures:\n` + data.failed.map(f => `- ${f.title}: ${f.reason}`).join('\n');
+        toast.error(`Updated: ${data.successful.length}, Failed: ${data.failed.length}`);
+      } else {
+        toast.success(`Successfully updated ${data.successful.length} tasks`);
       }
       
-      alert(alertMsg);
       setSelectedBatchTasks([]);
       setBatchStatus('');
       fetchTasks();
     } catch (err) {
-      alert('Failed to process batch update.');
+      toast.error('Failed to process batch update.');
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'Done': return '#059669';
+      case 'Blocked': return '#d93a5c';
+      case 'In Progress': return '#2563eb';
+      case 'In Review': return '#7c3aed';
+      default: return '#6a6a6a';
     }
   };
 
   return (
-    <div className="dashboard-container" style={{ paddingBottom: selectedBatchTasks.length > 0 ? '80px' : '20px' }}>
-      <header className="dashboard-header">
-        <div>
-          <Link to="/dashboard" className="back-link">&larr; Back to Dashboard</Link>
-          <h2 style={{ marginTop: '10px' }}>Global Task Search</h2>
-        </div>
-        <span className="role-badge">{role}</span>
-      </header>
+    <div className="global-tasks-wrapper" style={{ paddingBottom: selectedBatchTasks.length > 0 ? '100px' : '40px' }}>
+      <div className="global-tasks-content">
+        
+        <header className="global-header">
+          <div>
+            <h2 className="page-title">Global Task Search</h2>
+            <p className="page-subtitle">Find, filter, and export tasks across all your projects.</p>
+          </div>
+        </header>
 
-      <div className="filters-container">
-        <form onSubmit={handleSearchSubmit} className="search-form">
-          <input 
-            type="text" 
-            placeholder="Search tasks by title or description..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button type="submit">Search</button>
-        </form>
-
-        <div className="dropdown-filters">
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">All Statuses</option>
-            <option value="To Do">To Do</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Done">Done</option>
-          </select>
-
-          <select value={priority} onChange={(e) => setPriority(e.target.value)}>
-            <option value="">All Priorities</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-          </select>
-
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="createdAt">Sort: Newest First</option>
-            <option value="dueDate">Sort: Due Date</option>
-          </select>
-          
-          <label style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#FF385C', fontWeight: 'bold', cursor: 'pointer' }}>
+        <div className="filters-card">
+          <form onSubmit={handleSearchSubmit} className="search-bar">
             <input 
-              type="checkbox" 
-              checked={isOverdue} 
-              onChange={(e) => setIsOverdue(e.target.checked)} 
-              style={{ cursor: 'pointer' }}
+              type="text" 
+              placeholder="Search tasks by title or description..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="search-input"
             />
-            Show Overdue Tasks Only
-          </label>
+            <button type="submit" className="btn-search">Search</button>
+          </form>
 
-          <button onClick={handleExportCSV} style={{ background: '#333', color: 'white', padding: '8px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Export CSV
-          </button>
+          <div className="filter-controls">
+            <select className="filter-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="">All Statuses</option>
+              <option value="Backlog">Backlog</option>
+              <option value="In Progress">In Progress</option>
+              <option value="In Review">In Review</option>
+              <option value="Done">Done</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+
+            <select className="filter-select" value={priority} onChange={(e) => setPriority(e.target.value)}>
+              <option value="">All Priorities</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+
+            <select className="filter-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="createdAt">Sort: Newest First</option>
+              <option value="dueDate">Sort: Due Date</option>
+            </select>
+            
+            <label className="checkbox-toggle">
+              <input 
+                type="checkbox" 
+                checked={isOverdue} 
+                onChange={(e) => setIsOverdue(e.target.checked)} 
+              />
+              <span className="toggle-label">Overdue Only</span>
+            </label>
+
+            <button onClick={handleExportCSV} className="btn-export">
+              Export CSV
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="projects-grid" style={{ marginTop: '20px' }}>
-        {tasks.map(task => (
-          <div key={task._id} className="project-card" style={{ borderLeft: `4px solid ${task.status === 'Done' ? 'green' : '#FF385C'}`, backgroundColor: selectedBatchTasks.includes(task._id) ? '#f0f8ff' : '#fff' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8rem', color: '#888' }}>{task.project?.name}</span>
+        <div className="global-tasks-grid">
+          {tasks.map(task => {
+            const isTaskOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done';
+            const isSelected = selectedBatchTasks.includes(task._id);
+
+            return (
+              <div 
+                key={task._id} 
+                className={`global-task-card ${isSelected ? 'selected' : ''}`} 
+                style={{ borderLeftColor: getStatusColor(task.status) }}
+              >
+                <div className="gtc-header">
+                  <span className="gtc-project-name">{task.project?.name || 'Unknown Project'}</span>
+                  <div className="gtc-actions">
+                    <span className={`gtc-priority ${task.priority.toLowerCase()}`}>
+                      {task.priority}
+                    </span>
+                    <input 
+                      type="checkbox" 
+                      className="gtc-checkbox"
+                      checked={isSelected} 
+                      onChange={() => toggleBatchTask(task._id)}
+                      title="Select for batch update"
+                    />
+                  </div>
+                </div>
+                
+                <h4 className="gtc-title">
+                  <Link to={`/project/${task.project?._id || task.project}`}>{task.title}</Link>
+                </h4>
+                <p className="gtc-desc">{task.description}</p>
+                
+                <div className="gtc-meta">
+                  <div className="gtc-meta-row">
+                    <span className="gtc-meta-label">Status</span>
+                    <span className="gtc-meta-value">{task.status}</span>
+                  </div>
+                  <div className="gtc-meta-row">
+                    <span className="gtc-meta-label">Assigned</span>
+                    <span className="gtc-meta-value">{task.assignedTo?.name || 'Unassigned'}</span>
+                  </div>
+                  {task.dueDate && (
+                    <div className="gtc-meta-row">
+                      <span className="gtc-meta-label">Due Date</span>
+                      <span className={`gtc-meta-value ${isTaskOverdue ? 'text-danger font-bold' : ''}`}>
+                        {new Date(task.dueDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+          {tasks.length === 0 && (
+            <div className="global-tasks-empty">
+              <p>No tasks match your current filters.</p>
+            </div>
+          )}
+        </div>
+
+        {selectedBatchTasks.length > 0 && (
+          <div className="batch-bar-overlay">
+            <div className="batch-bar-content">
+              <div className="batch-info">
+                <span className="batch-count">{selectedBatchTasks.length}</span>
+                <span className="batch-text">Tasks Selected</span>
+              </div>
               
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: task.priority === 'High' ? 'red' : '#555' }}>
-                  {task.priority} Priority
-                </span>
-                <input 
-                  type="checkbox" 
-                  checked={selectedBatchTasks.includes(task._id)} 
-                  onChange={() => toggleBatchTask(task._id)}
-                  style={{ transform: 'scale(1.2)', cursor: 'pointer' }}
-                  title="Select for batch update"
-                />
+              <div className="batch-controls">
+                <select className="batch-select" value={batchStatus} onChange={e => setBatchStatus(e.target.value)}>
+                  <option value="">-- Set Status --</option>
+                  <option value="Backlog">Backlog</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="In Review">In Review</option>
+                  <option value="Done">Done</option>
+                  <option value="Blocked">Blocked</option>
+                </select>
+              </div>
+
+              <div className="batch-actions">
+                <button className="btn-batch-apply" onClick={handleBatchUpdate}>Apply Status</button>
+                <button className="btn-batch-clear" onClick={() => { setSelectedBatchTasks([]); setBatchStatus(''); }}>Cancel</button>
               </div>
             </div>
-            
-            <h4 style={{ margin: '10px 0' }}>{task.title}</h4>
-            <p>{task.description}</p>
-            
-            <div style={{ fontSize: '0.85rem', marginTop: '15px' }}>
-              <p><strong>Status:</strong> {task.status}</p>
-              <p><strong>Assigned To:</strong> {task.assignedTo?.name || 'Unassigned'}</p>
-              {task.dueDate && (
-                <p><strong>Due Date:</strong> <span style={{color: new Date(task.dueDate) < new Date() && task.status !== 'Done' ? 'red' : 'inherit'}}>{new Date(task.dueDate).toLocaleDateString()}</span></p>
-              )}
-            </div>
           </div>
-        ))}
-        {tasks.length === 0 && <p>No tasks match your filters.</p>}
+        )}
+
       </div>
-
-      {/* Floating Batch Update Panel */}
-      {selectedBatchTasks.length > 0 && (
-        <div style={{
-          position: 'fixed', bottom: 0, left: 0, right: 0, 
-          background: '#ffffff', padding: '15px 20px', 
-          boxShadow: '0 -4px 12px rgba(0,0,0,0.1)', 
-          display: 'flex', gap: '20px', alignItems: 'center', 
-          justifyContent: 'center', zIndex: 1000,
-          borderTop: '2px solid #007bff'
-        }}>
-          <strong style={{ fontSize: '1.1rem' }}>Batch Update ({selectedBatchTasks.length})</strong>
-          
-          <select value={batchStatus} onChange={e => setBatchStatus(e.target.value)} style={{ padding: '8px' }}>
-            <option value="">-- Set Status --</option>
-            <option value="To Do">To Do</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Done">Done</option>
-          </select>
-
-          <button onClick={handleBatchUpdate} style={{ background: '#28a745', color: 'white', padding: '8px 20px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-            Apply Status
-          </button>
-          
-          <button onClick={() => setSelectedBatchTasks([])} style={{ background: 'transparent', color: '#dc3545', padding: '8px 20px', border: '1px solid #dc3545', borderRadius: '4px', cursor: 'pointer' }}>
-            Clear Selection
-          </button>
-        </div>
-      )}
     </div>
   );
 };

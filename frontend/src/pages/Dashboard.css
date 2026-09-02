@@ -1,80 +1,29 @@
-.dashboard-container {
-  max-width: 1000px;
+.dashboard-wrapper {
+  background-color: #f7f7f7;
+  min-height: calc(100vh - 65px);
+  padding: 40px 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.dashboard-wrapper * {
+  box-sizing: border-box;
+}
+
+.dashboard-content {
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 2rem;
-  font-family: Arial, sans-serif;
 }
 
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 1rem;
-  margin-bottom: 2rem;
+.section-title {
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e4e4e4;
+  padding-bottom: 12px;
 }
 
-.role-badge {
-  background: #FF385C;
-  color: white;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  margin-right: 15px;
-}
-
-.logout-btn {
-  background: transparent;
-  border: 1px solid #FF385C;
-  color: #FF385C;
-  padding: 6px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.create-project-form {
-  background: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.create-project-form input {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  flex: 1;
-}
-
-.create-project-form button {
-  background: #FF385C;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.project-card {
-  border: 1px solid #eee;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.view-btn {
-  display: inline-block;
-  margin-top: 15px;
-  color: #FF385C;
-  text-decoration: none;
-  font-weight: bold;
+.section-title h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #222222;
+  margin: 0;
+  letter-spacing: -0.01em;
 }

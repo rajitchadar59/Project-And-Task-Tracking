@@ -1,0 +1,60 @@
+.select-box {
+  border: 1px solid #d1d1d1;
+  border-radius: 8px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  min-width: 200px;
+  transition: border-color 0.2s ease;
+}
+
+.select-box:focus-within {
+  border-color: #222222;
+}
+
+.select-search-input {
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  outline: none;
+  font-size: 13.5px;
+  background: #fafafa;
+  color: #222222;
+}
+
+.select-search-input::placeholder {
+  color: #8c8c8c;
+}
+
+.select-checkbox-list {
+  max-height: 140px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.select-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #222222;
+  cursor: pointer;
+}
+
+.select-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #222222;
+  cursor: pointer;
+}
+
+.select-empty {
+  font-size: 13px;
+  color: #8c8c8c;
+  font-style: italic;
+}

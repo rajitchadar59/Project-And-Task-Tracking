@@ -1,0 +1,158 @@
+.task-card {
+  background: #ffffff;
+  border: 1px solid #e4e4e4;
+  border-left: 4px solid #6a6a6a;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+}
+
+.task-card.selected {
+  background: #f8fafc;
+  border-color: #93c5fd;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.task-title {
+  margin: 0;
+  font-size: 16px;
+  color: #222222;
+  font-weight: 600;
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.task-desc {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #6a6a6a;
+  line-height: 1.5;
+}
+
+.task-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13.5px;
+  background: #fcfcfc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-key {
+  color: #6a6a6a;
+  font-weight: 600;
+  min-width: 85px;
+}
+
+.meta-val {
+  color: #222222;
+}
+
+.status-select {
+  padding: 4px 8px;
+  border: 1px solid #d1d1d1;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background: #ffffff;
+}
+
+.btn-dismiss {
+  margin-top: 12px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-dismiss:hover { background: #fde68a; }
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mt-3 { margin-top: 16px; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid #e4e4e4;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #222222;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover { background: #f7f7f7; border-color: #d1d1d1; }
+.btn-ghost.color-blue { color: #2563eb; border-color: #bfdbfe; }
+.btn-ghost.color-blue:hover { background: #eff6ff; }
+.btn-ghost.color-red { color: #d93a5c; border-color: #fecdd3; }
+.btn-ghost.color-red:hover { background: #ffe9ec; }
+
+/* Edit Mode */
+.task-edit-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-input, .edit-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d1d1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.edit-input:focus, .edit-textarea:focus { border-color: #222222; }
+.font-bold { font-weight: 600; }
+.edit-row-small { display: flex; gap: 12px; }
+.edit-row-large { display: flex; gap: 20px; flex-wrap: wrap; }
+.edit-multi-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 6px; }
+.edit-multi-group label { font-size: 13px; font-weight: 600; }
+
+.btn-save { background: #222222; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.btn-save:hover { background: #000000; }
+.btn-cancel { background: #f7f7f7; color: #222222; border: 1px solid #d1d1d1; padding: 8px 16px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+
+/* Timeline */
+.task-timeline { margin-top: 16px; background: #fafafa; border: 1px solid #e4e4e4; border-radius: 8px; padding: 16px; }
+.timeline-logs { max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
+.timeline-entry { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dotted #d1d1d1; font-size: 13px; }
+.timeline-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.log-action { font-weight: 700; margin-right: 6px; }
+.log-details { color: #222222; }
+.log-meta { font-size: 11px; color: #8c8c8c; margin-top: 4px; }
+.timeline-comment-box { display: flex; gap: 8px; }
+.comment-input { flex: 1; padding: 8px 12px; border: 1px solid #d1d1d1; border-radius: 6px; font-size: 13px; outline: none; }
+.btn-comment { background: #222222; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
