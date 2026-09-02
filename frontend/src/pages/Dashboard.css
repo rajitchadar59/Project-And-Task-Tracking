@@ -1,8 +1,11 @@
 .dashboard-wrapper {
   background-color: #f7f7f7;
   min-height: calc(100vh - 65px);
+  width: 100%; 
   padding: 40px 24px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .dashboard-wrapper * {
@@ -12,18 +15,85 @@
 .dashboard-content {
   max-width: 1320px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .section-title {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   border-bottom: 2px solid #e4e4e4;
   padding-bottom: 12px;
+  width: 100%;
 }
 
 .section-title h2 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: #222222;
   margin: 0;
   letter-spacing: -0.01em;
+}
+
+.dashboard-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+  align-items: start;
+  width: 100%;
+}
+
+.dashboard-projects-col {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 550px; 
+  width: 100%;
+}
+
+.dashboard-charts-col {
+  width: 100%;
+}
+
+.projects-scroll-area {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 12px;
+  width: 100%;
+}
+
+.projects-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.projects-scroll-area::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+  border-radius: 10px;
+}
+
+.projects-scroll-area::-webkit-scrollbar-thumb {
+  background: #d1d1d1; 
+  border-radius: 10px;
+}
+
+.projects-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8; 
+}
+
+@media (max-width: 1100px) {
+  .dashboard-split-layout {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-projects-col {
+    max-height: none;
+  }
+  .projects-scroll-area {
+    overflow-y: visible;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-wrapper {
+    padding: 20px 16px;
+  }
 }

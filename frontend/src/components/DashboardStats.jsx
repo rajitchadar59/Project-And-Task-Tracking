@@ -5,22 +5,25 @@ const DashboardStats = ({ stats }) => {
   if (!stats) return null;
 
   return (
-    <div className="stats-grid">
-      <div className="stat-card stat-blue">
-        <h3 className="stat-value">{stats.open}</h3>
+    <div className="stats-overview-card">
+      <div className="stat-block">
         <p className="stat-label">Open Tasks</p>
+        <h3 className="stat-value color-blue">{stats.open}</h3>
       </div>
-      <div className="stat-card stat-red">
-        <h3 className="stat-value">{stats.overdue}</h3>
-        <p className="stat-label">Overdue Tasks</p>
+      <div className="stat-divider"></div>
+      <div className="stat-block">
+        <p className="stat-label">Overdue</p>
+        <h3 className="stat-value color-red">{stats.overdue}</h3>
       </div>
-      <div className="stat-card stat-yellow">
-        <h3 className="stat-value">{stats.dueThisWeek}</h3>
+      <div className="stat-divider"></div>
+      <div className="stat-block">
         <p className="stat-label">Due This Week</p>
+        <h3 className="stat-value color-yellow">{stats.dueThisWeek}</h3>
       </div>
-      <div className="stat-card stat-green">
-        <h3 className="stat-value">{stats.completedThisWeek}</h3>
-        <p className="stat-label">Completed This Week</p>
+      <div className="stat-divider"></div>
+      <div className="stat-block">
+        <p className="stat-label">Completed</p>
+        <h3 className="stat-value color-green">{stats.completedThisWeek}</h3>
       </div>
     </div>
   );

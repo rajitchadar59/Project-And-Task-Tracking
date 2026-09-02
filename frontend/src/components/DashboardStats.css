@@ -1,40 +1,78 @@
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
-}
 
-.stat-card {
+.stats-overview-card {
+  display: flex;
+  align-items: center;
   background: #ffffff;
   border: 1px solid #e4e4e4;
-  border-radius: 16px;
-  padding: 24px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 12px;
+  padding:0.3rem;
+  margin-bottom: 18px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+.stat-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
 }
 
-.stat-value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.2;
+.stat-divider {
+  width: 1px;
+  height: 50px;
+  background-color: #e4e4e4;
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  margin: 8px 0 0 0;
-  color: #6a6a6a;
+  color: #8c8c8c;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.stat-blue .stat-value { color: #2563eb; }
-.stat-red .stat-value { color: #d93a5c; }
-.stat-yellow .stat-value { color: #d97706; }
-.stat-green .stat-value { color: #059669; }
+.stat-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+}
+
+.color-blue { color: #2563eb; }
+.color-red { color: #d93a5c; }
+.color-yellow { color: #d97706; }
+.color-green { color: #059669; }
+
+@media (max-width: 768px) {
+  .stats-overview-card {
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    align-items: stretch;
+  }
+  
+  .stat-block {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 20px 24px;
+    box-sizing: border-box;
+  }
+  
+  .stat-divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .stat-label {
+    font-size: 14px;
+  }
+
+  .stat-value {
+    font-size: 1.8rem;
+  }
+}

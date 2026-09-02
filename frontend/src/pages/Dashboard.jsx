@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
 import DashboardStats from '../components/DashboardStats';
-import DashboardCharts from '../components/DashboardCharts';
+import { DashboardPieBar, DashboardLine } from '../components/DashboardCharts';
 import ProjectList from '../components/ProjectList';
 import ProjectForm from '../components/ProjectForm';
 import './Dashboard.css';
@@ -65,7 +65,7 @@ const Dashboard = () => {
     setName(project.name);
     setDescription(project.description);
     setSelectedMembers(project.members ? project.members.map(m => m._id) : []);
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll up to the form
   };
 
   const resetForm = () => {
@@ -107,23 +107,7 @@ const Dashboard = () => {
     <div className="dashboard-wrapper">
       <div className="dashboard-content">
         
-        <div className="section-title">
-          <h2>Portfolio Overview</h2>
-        </div>
-        
         <DashboardStats stats={stats} />
-        <DashboardCharts stats={stats} />
-
-        <div className="section-title">
-          <h2>Active Projects</h2>
-        </div>
-
-        <ProjectList 
-          projects={projects} 
-          role={role} 
-          onEdit={handleEditClick} 
-          onArchive={handleArchive} 
-        />
 
         {role === 'Manager' && (
           <ProjectForm 
@@ -139,6 +123,28 @@ const Dashboard = () => {
             isEditing={!!editingProjectId}
           />
         )}
+
+        <div className="dashboard-split-layout">
+          <div className="dashboard-charts-col">
+            <DashboardPieBar stats={stats} />
+          </div>
+          
+          <div className="dashboard-projects-col">
+            <div className="section-title">
+              <h2>Active Projects</h2>
+            </div>
+            <div className="projects-scroll-area">
+              <ProjectList 
+                projects={projects} 
+                role={role} 
+                onEdit={handleEditClick} 
+                onArchive={handleArchive} 
+              />
+            </div>
+          </div>
+        </div>
+
+        <DashboardLine stats={stats} />
         
       </div>
     </div>
