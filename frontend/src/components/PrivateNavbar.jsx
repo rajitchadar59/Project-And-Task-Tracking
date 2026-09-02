@@ -8,6 +8,7 @@ const PrivateNavbar = () => {
   const { logout, role, userId } = useAuth(); 
   const [overdueTasks, setOverdueTasks] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); 
   
   const location = useLocation();
   const dropdownRef = useRef(null);
@@ -16,10 +17,8 @@ const PrivateNavbar = () => {
     const fetchOverdueAlerts = async () => {
       try {
         const { data } = await axios.get('/tasks/global?isOverdue=true');
-        
         let activeAlerts = [];
         if (userId) {
-          // FIXED: Bulletproof string matching for IDs
           activeAlerts = data.filter(t => {
             if (!t.dismissedBy) return true;
             return !t.dismissedBy.some(id => String(id) === String(userId));
@@ -27,7 +26,6 @@ const PrivateNavbar = () => {
         } else {
           activeAlerts = data.filter(t => !t.dismissedBy || t.dismissedBy.length === 0);
         }
-        
         setOverdueTasks(activeAlerts);
       } catch (err) {
         console.error('Error fetching overdue alerts:', err);
@@ -35,13 +33,10 @@ const PrivateNavbar = () => {
     };
 
     fetchOverdueAlerts();
-
     window.addEventListener('alertsUpdated', fetchOverdueAlerts);
     return () => window.removeEventListener('alertsUpdated', fetchOverdueAlerts);
-
   }, [location.pathname, userId]); 
 
-  // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -54,63 +49,88 @@ const PrivateNavbar = () => {
 
   return (
     <nav className="private-nav">
-      <div className="nav-brand">
-        <Link to="/dashboard">TaskFlow</Link>
-      </div>
-      <div className="nav-menu" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <div className="nav-inner">
         
-        <div ref={dropdownRef} style={{ position: 'relative' }}>
-          <button 
-            onClick={() => setShowDropdown(!showDropdown)}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', color: '#333', position: 'relative', padding: 0 }}
-          >
-            Alerts
-            {overdueTasks.length > 0 && (
-              <span style={{
-                position: 'absolute', top: '-10px', right: '-15px',
-                background: '#FF385C', color: 'white', borderRadius: '50%',
-                padding: '2px 6px', fontSize: '0.75rem', fontWeight: 'bold'
-              }}>
-                {overdueTasks.length}
-              </span>
-            )}
-          </button>
+       
+        <Link to="/dashboard" className="nav-brand" onClick={() => setMenuOpen(false)}>
+          <span className="nav-logo-mark">PTT</span>
+          Project Task Tracker
+        </Link>
 
-          {showDropdown && (
-            <div style={{
-              position: 'absolute', top: '35px', right: '-20px', width: '260px',
-              background: 'white', border: '1px solid #ddd', borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, padding: '15px',
-              textAlign: 'left'
-            }}>
-              <h4 style={{ margin: '0 0 10px 0', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Active Alerts</h4>
-              
-              {overdueTasks.length === 0 ? (
-                <p style={{ fontSize: '0.85rem', color: '#666', margin: 0 }}>You have no pending alerts.</p>
-              ) : (
-                <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
-                  {overdueTasks.map(task => (
-                    <div key={task._id} style={{ padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
-                      <Link 
-                        to={`/project/${task.project._id || task.project}`} 
-                        onClick={() => setShowDropdown(false)}
-                        style={{ textDecoration: 'none', color: '#007bff', fontWeight: 'bold', fontSize: '0.9rem', display: 'block' }}
-                      >
-                        {task.title}
-                      </Link>
-                      <span style={{ fontSize: '0.75rem', color: '#FF385C' }}>
-                        Due: {new Date(task.dueDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+        
+        <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
+          <Link to="/dashboard" onClick={() => setMenuOpen(false)} className={location.pathname === '/dashboard' ? 'active' : ''}>Dashboard</Link>
+          <Link to="/tasks/global" onClick={() => setMenuOpen(false)} className={location.pathname.includes('/tasks/global') ? 'active' : ''}>Search Tasks</Link>
+          {role === 'Manager' && (
+            <Link to="/projects/archived" onClick={() => setMenuOpen(false)} className={location.pathname.includes('archived') ? 'active' : ''}>Archived Projects</Link>
           )}
+
+        
+          <div className="mobile-actions">
+            <span className="role-badge-mobile">{role}</span>
+            <button onClick={logout} className="nav-btn-logout">Log Out</button>
+          </div>
         </div>
 
-        <span className="role-badge">{role}</span>
-        <button onClick={logout} className="nav-btn-outline">Log Out</button>
+        
+        <div className="nav-actions-desktop">
+          <div ref={dropdownRef} className="alert-dropdown-container">
+            <button onClick={() => setShowDropdown(!showDropdown)} className="alert-btn" aria-label="Alerts">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              {overdueTasks.length > 0 && (
+                <span className="alert-badge">{overdueTasks.length}</span>
+              )}
+            </button>
+
+            {showDropdown && (
+              <div className="alert-dropdown-menu">
+                <div className="alert-dropdown-header">
+                  <h4>Active Alerts</h4>
+                </div>
+                {overdueTasks.length === 0 ? (
+                  <p className="alert-empty">You have no pending alerts.</p>
+                ) : (
+                  <div className="alert-list">
+                    {overdueTasks.map(task => (
+                      <div key={task._id} className="alert-item">
+                        <Link 
+                          to={`/project/${task.project._id || task.project}`} 
+                          onClick={() => setShowDropdown(false)}
+                          className="alert-item-title"
+                        >
+                          {task.title}
+                        </Link>
+                        <span className="alert-item-date">
+                          Due: {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <span className="role-badge-desktop">{role}</span>
+          <button onClick={logout} className="nav-btn-logout">Log out</button>
+        </div>
+
+      
+        <button
+          type="button"
+          className={`nav-toggle ${menuOpen ? 'open' : ''}`}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
       </div>
     </nav>
   );
