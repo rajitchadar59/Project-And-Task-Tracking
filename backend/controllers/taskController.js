@@ -157,12 +157,40 @@ const deleteTask = async (req, res) => {
   }
 };
 
+
+
+
 const getGlobalTasks = async (req, res) => {
   try {
-    const { status, priority, search, sortBy, isOverdue } = req.query;
+    const { 
+      status, priority, search, sortBy, isOverdue, project, assignedTo, 
+      page = 1, limit = 10 
+    } = req.query;
     
     let query = {};
-    if (req.role === 'Member') query.assignedTo = req.userId; // Matches automatically inside array in MongoDB
+    
+    
+    if (req.role === 'Member') {
+      const memberProjects = await Project.find({ members: req.userId }).select('_id');
+      const projectIds = memberProjects.map(p => p._id.toString());
+      
+      if (project) {
+       
+        if (!projectIds.includes(project.toString())) {
+          return res.status(200).json({ tasks: [], totalCount: 0 }); // Unauthorized access to this project
+        }
+        query.project = project;
+      } else {
+        
+        query.project = { $in: projectIds };
+      }
+    } else {
+      
+      if (project) query.project = project;
+    }
+
+    
+    if (assignedTo) query.assignedTo = assignedTo;
     if (status) query.status = status;
     if (priority) query.priority = priority;
     if (search) {
@@ -177,17 +205,27 @@ const getGlobalTasks = async (req, res) => {
       query.status = { $ne: 'Done' };      
     }
 
+    
     let sortOptions = {};
     if (sortBy === 'dueDate') sortOptions.dueDate = 1; 
+    else if (sortBy === 'priority') sortOptions.priority = -1; // Basic string reverse sort for priority
+    else if (sortBy === 'updatedAt') sortOptions.updatedAt = -1; 
     else sortOptions.createdAt = -1; 
 
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const limitNum = parseInt(limit);
+
+    const totalCount = await Task.countDocuments(query);
     const tasks = await Task.find(query)
       .populate('project', 'name')
       .populate('assignedTo', 'name')
       .populate('history.user', 'name')
-      .sort(sortOptions);
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limitNum);
 
-    res.status(200).json(tasks);
+    res.status(200).json({ tasks, totalCount });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch global tasks' });
   }
@@ -272,7 +310,7 @@ const batchUpdateTasks = async (req, res) => {
 
           if (!isValidMove) {
             results.failed.push({ taskId: id, title: task.title, reason: failReason });
-            continue; // Move to the next task in the loop
+            continue; 
           }
 
    
@@ -287,7 +325,7 @@ const batchUpdateTasks = async (req, res) => {
              
              if (oldDateStr !== newDateStr) {
                  task.dueDate = updates.dueDate || null;
-                 task.dismissedBy = []; // Nayi due date aane par purane alerts reset hote hain
+                 task.dismissedBy = []; 
                  task.history.push({ action: 'Update', details: 'Batch: Due date changed', user: req.userId });
              }
         }
