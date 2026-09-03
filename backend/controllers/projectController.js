@@ -3,6 +3,11 @@ const Task = require('../models/Task');
 
 const createProject = async (req, res) => {
   try {
+   
+    if (req.role !== 'Manager') {
+      return res.status(403).json({ error: 'Access denied: Only managers can create projects.' });
+    }
+
     const { name, description, members } = req.body;
     
     const project = await Project.create({
@@ -27,7 +32,6 @@ const getProjects = async (req, res) => {
       query.members = req.userId;
     }
     
-
     const projects = await Project.find(query)
       .populate('owner', 'name username email')
       .populate('members', 'name email'); 
@@ -38,26 +42,30 @@ const getProjects = async (req, res) => {
   }
 };
 
-
-
 const updateProject = async (req, res) => {
   try {
+
+    if (req.role !== 'Manager') {
+      return res.status(403).json({ error: 'Access denied: Only managers can edit projects.' });
+    }
+
     const { id } = req.params;
     const { name, description, members } = req.body;
 
-    const project = await Project.findOne({ _id: id, owner: req.userId });
-    if (!project) return res.status(404).json({ error: 'Project not found or unauthorized' });
+  
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
 
     const oldMembers = project.members.map(m => m.toString());
     const newMembers = members || [];
     const removedMembers = oldMembers.filter(m => !newMembers.includes(m));
 
-    
     project.name = name || project.name;
     project.description = description || project.description;
     project.members = newMembers;
     await project.save();
 
+   
     if (removedMembers.length > 0) {
       await Task.updateMany(
         { project: id, assignedTo: { $in: removedMembers } },
@@ -73,16 +81,22 @@ const updateProject = async (req, res) => {
 
 const archiveProject = async (req, res) => {
   try {
+  
+    if (req.role !== 'Manager') {
+      return res.status(403).json({ error: 'Access denied: Only managers can archive projects.' });
+    }
+
     const { id } = req.params;
   
-    const project = await Project.findOneAndUpdate(
-      { _id: id, owner: req.userId }, 
+
+    const project = await Project.findByIdAndUpdate(
+      id, 
       { isArchived: true },
-      { returnDocument: 'after' } 
+      { new: true } 
     );
     
     if (!project) {
-      return res.status(404).json({ error: 'Project not found or you are not the owner' });
+      return res.status(404).json({ error: 'Project not found' });
     }
     res.status(200).json({ message: 'Project archived successfully', project });
   } catch (error) {
@@ -92,11 +106,18 @@ const archiveProject = async (req, res) => {
 
 const restoreProject = async (req, res) => {
   try {
+
+    if (req.role !== 'Manager') {
+      return res.status(403).json({ error: 'Access denied: Only managers can restore projects.' });
+    }
+
     const { id } = req.params;
-    const project = await Project.findOneAndUpdate(
-      { _id: id, owner: req.userId }, 
+    
+    
+    const project = await Project.findByIdAndUpdate(
+      id, 
       { isArchived: false },
-      { returnDocument: 'after' } 
+      { new: true } 
     );
     
     if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -119,10 +140,13 @@ const getProjectById = async (req, res) => {
   }
 };
 
-
-
 const getArchivedProjects = async (req, res) => {
   try {
+    
+    if (req.role !== 'Manager') {
+      return res.status(403).json({ error: 'Access denied: Only managers can view archived projects.' });
+    }
+
     const projects = await Project.find({ isArchived: true })
       .populate('owner', 'name')
       .populate('members', 'name email');
@@ -133,8 +157,12 @@ const getArchivedProjects = async (req, res) => {
   }
 };
 
-
-
-
-module.exports = { createProject, getProjects, archiveProject, updateProject, restoreProject , getProjectById , getArchivedProjects};
-
+module.exports = { 
+  createProject, 
+  getProjects, 
+  archiveProject, 
+  updateProject, 
+  restoreProject, 
+  getProjectById, 
+  getArchivedProjects 
+};

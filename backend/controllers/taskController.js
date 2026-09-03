@@ -446,6 +446,12 @@ const dismissAlert = async (req, res) => {
     const task = await Task.findById(id);
     if (!task) return res.status(404).json({ error: 'Task not found' });
 
+    
+    const isAssigned = task.assignedTo.some(assigneeId => String(assigneeId) === String(req.userId));
+    if (!isAssigned) {
+      return res.status(403).json({ error: 'Access denied: Only users assigned to this task can dismiss its alert.' });
+    }
+
     if (!task.dismissedBy.includes(req.userId)) {
       task.dismissedBy.push(req.userId);
       await task.save();
