@@ -366,11 +366,9 @@ const getDashboardStats = async (req, res) => {
     let query = {};
     
     if (req.role === 'Member') {
-     
       const memberProjects = await Project.find({ members: req.userId }).select('_id');
       const projectIds = memberProjects.map(p => p._id);
       
-    
       query = {
         project: { $in: projectIds },
         assignedTo: req.userId
@@ -432,6 +430,22 @@ const getDashboardStats = async (req, res) => {
         }
       }
     });
+
+    
+    if (req.role === 'Member') {
+      const loggedInUserObj = tasks.find(t => t.assignedTo?.some(u => String(u._id) === String(req.userId)));
+      
+      const currentUserName = Object.keys(stats.byAssignee).find(name => {
+       
+        return tasks.some(t => t.assignedTo?.some(u => String(u._id) === String(req.userId) && u.name === name));
+      });
+
+      if (currentUserName) {
+        stats.byAssignee = { [currentUserName]: stats.byAssignee[currentUserName] };
+      } else {
+        stats.byAssignee = {};
+      }
+    }
 
     res.status(200).json(stats);
   } catch (error) {
