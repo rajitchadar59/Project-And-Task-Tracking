@@ -360,10 +360,22 @@ const batchUpdateTasks = async (req, res) => {
   }
 };
 
+
 const getDashboardStats = async (req, res) => {
   try {
     let query = {};
-    if (req.role === 'Member') query.assignedTo = req.userId;
+    
+    if (req.role === 'Member') {
+     
+      const memberProjects = await Project.find({ members: req.userId }).select('_id');
+      const projectIds = memberProjects.map(p => p._id);
+      
+    
+      query = {
+        project: { $in: projectIds },
+        assignedTo: req.userId
+      };
+    }
 
     const tasks = await Task.find(query).populate('assignedTo', 'name');
     const now = new Date();
