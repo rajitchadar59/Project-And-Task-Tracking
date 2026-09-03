@@ -1,4 +1,4 @@
-# Key Technical Decisions
+# Key Decisions
 
 **1. Manager Creation Strategy**
 *   **Chose:** A hidden backend API route (`/api/auth/hidden-manager`) protected by a static `.env` secret.
@@ -10,7 +10,7 @@
 *   **Rejected:** Redux or Zustand.
 *   **Why:** The only global state required right now is the JWT token and user role. Redux introduces unnecessary boilerplate for this scale.
 
-**3. Mongoose Pre-Save Hook (The Reversal)**
+**3. Mongoose Pre-Save Hook (Reversed)**
 *   **Chose (Eventually):** A pure `async/await` function returning early if the password is unmodified.
 *   **Rejected (Initially Chosen, then Reversed):** Using the traditional `next()` callback function inside the hook.
 *   **Why:** Initial implementation caused the server to crash with `TypeError: next is not a function`. Modern Mongoose handles promises directly in async hooks, making the `next` parameter obsolete and crash-prone.
@@ -45,38 +45,33 @@
 *   **Rejected:** Relying purely on frontend UI blocking (disabling the dropdown) or using complex Mongoose pre-save hooks.
 *   **Why:** Frontend validation is insecure and easily bypassed via API clients. Pre-save hooks make sending specific error messages (like the exact names of the blocking tasks) back to the client difficult. Controller-level validation ensures bulletproof security while allowing a clean error response containing the exact `blockingTasks` array.
 
-
 **10. Task Visibility Architecture (Global vs. Project)**
 *   **Chose:** Implementing a split-visibility model. In the "My Tasks" (Global) view, members only see explicitly assigned tasks. In the "Project" view, members see all tasks within that project.
 *   **Why:** Global view is for personal focus (what *I* need to do). Project view requires transparency so developers can see unassigned tasks and track tasks that are blocking their own work (Dependency Blocking).
 
-
 **11. Soft Deletion over Hard Deletion for Projects**
-* **Chose:** Used an `isArchived: true` flag instead of deleting documents from the database.
-* **Why:** Permanent deletion creates orphaned tasks and destroys historical data. Soft deletion gives Managers a safety net to restore projects.
+*   **Chose:** Used an `isArchived: true` flag instead of deleting documents from the database.
+*   **Why:** Permanent deletion creates orphaned tasks and destroys historical data. Soft deletion gives Managers a safety net to restore projects.
 
 **12. Iterative Batch Processing vs. Bulk Operations**
 *   **Chose:** I processed batch task updates by looping through them one by one in the Node.js controller using a `for...of` loop, evaluating rules per task, and returning a detailed success/fail summary.
 *   **Rejected:** Using Mongoose bulk operations like `Task.updateMany()`.
 *   **Why:** The assignment explicitly required that illegal moves in a batch (like marking a blocked task as Done) must be rejected with a reason, but *valid* tasks in the same batch must still succeed. A single `updateMany` query would either bypass my JavaScript-level dependency checks or fail the entire operation at once if I tried to use database-level validation. Processing them iteratively ensured isolated validation.
 
-
 **13. Dashboard Data Aggregation Strategy**
 *   **Chose:** Aggregating all dashboard statistics (open counts, overdue, chart distributions) in a single backend controller (`/stats`) and passing a formatted JSON object to the frontend.
 *   **Rejected:** Fetching all raw tasks to the frontend and calculating the stats using JavaScript array methods in React.
 *   **Why:** Fetching all tasks just to count them is incredibly inefficient and slows down the client. Server-side calculation ensures the frontend remains fast and only receives the exact numbers needed for Chart.js.
 
-
 **14. Audit Log Data Modeling**
-* **Chose:** Embedding the `history` log array directly inside the `Task` document.
-* **Rejected:** Creating a separate `AuditLog` collection and linking it via ObjectIds.
-* **Why:** The audit timeline is tightly coupled to the task. Embedding it avoids a costly database `$lookup` (join) on every read, keeping the task detail view extremely fast.
+*   **Chose:** Embedding the `history` log array directly inside the `Task` document.
+*   **Rejected:** Creating a separate `AuditLog` collection and linking it via ObjectIds.
+*   **Why:** The audit timeline is tightly coupled to the task. Embedding it avoids a costly database `$lookup` (join) on every read, keeping the task detail view extremely fast.
 
 **15. Open Collaboration vs. Strict Assignment Locking**
-* **Chose:** Allowing any project member to comment on or update a task, even if it is not explicitly assigned to them, while automatically logging their name in the immutable history.
-* **Rejected:** Strictly locking comments/updates so that only the `assignedTo` user can touch the task.
-* **Why:** Real-world collaboration requires unassigned members to ask questions (e.g., "When will this blocking task be done?"). The immutable audit log naturally enforces accountability without breaking collaboration.
-
+*   **Chose:** Allowing any project member to comment on or update a task, even if it is not explicitly assigned to them, while automatically logging their name in the immutable history.
+*   **Rejected:** Strictly locking comments/updates so that only the `assignedTo` user can touch the task.
+*   **Why:** Real-world collaboration requires unassigned members to ask questions (e.g., "When will this blocking task be done?"). The immutable audit log naturally enforces accountability without breaking collaboration.
 
 **16. UI State Synchronization for Alerts**
 *   **Chose:** Native browser Custom DOM Events (`window.dispatchEvent` / `addEventListener`).
@@ -87,3 +82,18 @@
 *   **Chose:** Allowing Members to edit task details (Title, Description, Dependencies) rather than locking the 'Edit' button strictly to Managers.
 *   **Rejected:** Hard-locking task details so Members can only change Status.
 *   **Why:** The scenario requires staff to effectively manage their work. If a Member edits a task maliciously or incorrectly, Goal 9 (Immutable History) guarantees the Manager sees exactly who did it and when. Security is enforced via the immutable audit trail rather than restrictive UI friction.
+
+**18. Strict Alert Dismissal Logic (Reversed)**
+*   **Chose:** Locking alert dismissals strictly to the assigned user (`isAssignedToMe`).
+*   **Rejected (Initially Chosen, then Reversed):** Allowing any user with the 'Manager' role to bypass the check and dismiss alerts globally across the dashboard.
+*   **Why:** After re-evaluating Goal 10 ("dismiss an alert for a task they are assigned to"), I realized giving Managers global override privileges violated the strict business logic. I reversed the decision and locked dismissal strictly to assignees for all users.
+
+**19. Global Manager Project Permissions**
+*   **Chose:** Allowing any Manager to edit or archive any project globally.
+*   **Rejected:** Restricting project editing/archiving strictly to the project's original creator/owner.
+*   **Why:** The brief stated "Managers can create and archive projects" without specifying owner-only restrictions. To avoid scope creep and keep the MVP simple for a shared company portfolio, I kept the permission role-based globally rather than building complex inter-manager permission walls.
+
+**20. Server-Side Role Enforcement**
+*   **Chose:** Enforcing Manager-only actions (creating, editing, archiving projects) directly in the Express controllers (`if (req.role !== 'Manager') return res.status(403)`).
+*   **Rejected:** Relying solely on conditional rendering in React (e.g., hiding the 'Archive' button) to protect Manager features.
+*   **Why:** Goal 1 explicitly requires that "The difference must be enforced on the server, not just hidden in the interface." UI hiding is insecure and easily bypassed via direct API calls. Server-side middleware guarantees absolute data security.
