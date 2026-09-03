@@ -469,7 +469,32 @@ const dismissAlert = async (req, res) => {
   }
 };
 
+
+const getAlerts = async (req, res) => {
+  try {
+    const query = {
+      dueDate: { $lt: new Date() },
+      status: { $ne: 'Done' },
+      dismissedBy: { $ne: req.userId }
+    };
+
+    if (req.role === 'Member') {
+      query.assignedTo = req.userId;
+    }
+
+    const alerts = await Task.find(query)
+      .populate('project', 'name')
+      .sort({ dueDate: 1 }); 
+
+    res.status(200).json(alerts);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch alerts' });
+  }
+};
+
+
+
 module.exports = { 
   createTask, getTasksByProject, updateTask, deleteTask, 
-  getGlobalTasks, batchUpdateTasks, getDashboardStats, addTaskComment, dismissAlert 
+  getGlobalTasks, batchUpdateTasks, getDashboardStats, addTaskComment, dismissAlert , getAlerts 
 };

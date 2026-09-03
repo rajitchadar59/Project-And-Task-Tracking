@@ -8,18 +8,22 @@ const {
   batchUpdateTasks,
   getDashboardStats,
   addTaskComment,
-  dismissAlert 
+  dismissAlert,
+   getAlerts 
 } = require('../controllers/taskController');
 const { authMiddleware, authorizeRole } = require('../middleware/authMiddleware');
+
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
 router.get('/global', getGlobalTasks);
-router.get('/stats', getDashboardStats); 
+router.get('/stats', getDashboardStats);
+router.get('/alerts', authMiddleware, getAlerts); 
 
 router.post('/', createTask);
+
 router.get('/project/:projectId', getTasksByProject);
 router.patch('/batch', batchUpdateTasks);
 router.patch('/:id', updateTask);
