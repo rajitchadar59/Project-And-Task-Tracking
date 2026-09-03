@@ -14,26 +14,18 @@ const AlertDropdown = () => {
   useEffect(() => {
     const fetchOverdueAlerts = async () => {
       try {
-        const { data } = await axios.get('/tasks/global?isOverdue=true');
-        // FIXED: Extract 'tasks' array from the paginated backend response
-        const tasksArray = data.tasks || data || []; 
-
-        let activeAlerts = [];
-        if (userId) {
-          activeAlerts = tasksArray.filter(t => {
-            if (!t.dismissedBy) return true;
-            return !t.dismissedBy.some(id => String(id) === String(userId));
-          });
-        } else {
-          activeAlerts = tasksArray.filter(t => !t.dismissedBy || t.dismissedBy.length === 0);
-        }
-        setOverdueTasks(activeAlerts);
+        
+        const { data } = await axios.get('/tasks/alerts');
+        setOverdueTasks(data); 
       } catch (err) {
         console.error('Error fetching overdue alerts:', err);
       }
     };
 
-    fetchOverdueAlerts();
+    if (userId) {
+      fetchOverdueAlerts();
+    }
+    
     window.addEventListener('alertsUpdated', fetchOverdueAlerts);
     return () => window.removeEventListener('alertsUpdated', fetchOverdueAlerts);
   }, [location.pathname, userId]); 
@@ -72,7 +64,7 @@ const AlertDropdown = () => {
               {overdueTasks.map(task => (
                 <div key={task._id} className="alert-item">
                   <Link 
-                    to={`/projects/${task.project._id || task.project}`} 
+                    to={`/projects/${task.project?._id || task.project}`} 
                     onClick={() => setShowDropdown(false)}
                     className="alert-item-title"
                   >
