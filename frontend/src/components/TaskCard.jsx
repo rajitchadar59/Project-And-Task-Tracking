@@ -9,7 +9,8 @@ const TaskCard = ({
   projectMembers, allTasks, 
   isSelectedForBatch, onToggleBatchTask, 
   isTimelineOpen, onToggleTimeline, 
-  commentText, onCommentChange, onAddComment 
+  commentText, onCommentChange, onAddComment,
+  isLoading 
 }) => {
   const [editMemberSearch, setEditMemberSearch] = useState('');
   const [editTaskSearch, setEditTaskSearch] = useState('');
@@ -17,7 +18,6 @@ const TaskCard = ({
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done';
   const hasDismissed = task.dismissedBy?.some(id => String(id) === String(userId));
   const isAssignedToMe = task.assignedTo?.some(u => String(u._id || u) === String(userId));
-  
   
   const canDismiss = isAssignedToMe;
 
@@ -100,8 +100,29 @@ const TaskCard = ({
           </div>
 
           <div className="task-actions mt-3">
-            <button className="btn-save" onClick={() => onSaveEdit(task._id)}>Save</button>
-            <button className="btn-cancel" onClick={onCancelEdit}>Cancel</button>
+            <button 
+              className="btn-save" 
+              onClick={() => onSaveEdit(task._id)}
+              disabled={isLoading}
+              style={{ 
+                opacity: isLoading ? 0.7 : 1, 
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                gap: '6px'
+              }}
+            >
+              {isLoading && <span className="btn-spinner"></span>}
+              {isLoading ? 'Saving...' : 'Save'}
+            </button>
+            <button 
+              className="btn-cancel" 
+              onClick={onCancelEdit}
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>

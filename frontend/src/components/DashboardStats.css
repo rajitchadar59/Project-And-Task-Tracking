@@ -76,3 +76,41 @@
     font-size: 1.8rem;
   }
 }
+
+
+
+
+.stats-loader-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  height: 120px; 
+  width: 100%;
+}
+
+/* Spinner Animation */
+.stats-spinner {
+  width: 35px;
+  height: 35px;
+  border: 4px solid rgba(37, 99, 235, 0.2);
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: stats-spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+.loading-text {
+  color: #6a6a6a;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+@keyframes stats-spin {
+  to { transform: rotate(360deg); }
+}

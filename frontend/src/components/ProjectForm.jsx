@@ -8,7 +8,8 @@ const ProjectForm = ({
   description, setDescription, 
   selectedMembers, onMemberToggle, 
   users, 
-  isEditing 
+  isEditing,
+  isLoading 
 }) => {
   const [memberSearch, setMemberSearch] = useState('');
 
@@ -73,11 +74,31 @@ const ProjectForm = ({
           </div>
           
           <div className="form-actions">
-            <button type="submit" className="btn-submit">
-              {isEditing ? 'Save Changes' : 'Create Project'}
+            <button 
+              type="submit" 
+              className="btn-submit"
+              disabled={isLoading}
+              style={{ 
+                opacity: isLoading ? 0.7 : 1, 
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                gap: '8px' 
+              }}
+            >
+              {isLoading && <span className="btn-spinner"></span>}
+              {isLoading 
+                ? (isEditing ? 'Saving...' : 'Creating...') 
+                : (isEditing ? 'Save Changes' : 'Create Project')}
             </button>
             {isEditing && (
-              <button type="button" onClick={onCancel} className="btn-cancel">
+              <button 
+                type="button" 
+                onClick={onCancel} 
+                className="btn-cancel"
+                disabled={isLoading}
+              >
                 Cancel Edit
               </button>
             )}

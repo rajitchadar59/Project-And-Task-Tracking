@@ -1,8 +1,17 @@
 import React from 'react';
 import './DashboardStats.css';
 
-const DashboardStats = ({ stats }) => {
-  if (!stats) return null;
+
+const DashboardStats = ({ stats, isLoading }) => {
+ 
+  if (isLoading || !stats) {
+    return (
+      <div className="stats-loader-card">
+        <div className="stats-spinner"></div>
+        <p className="loading-text">Loading Stats...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="stats-overview-card">
