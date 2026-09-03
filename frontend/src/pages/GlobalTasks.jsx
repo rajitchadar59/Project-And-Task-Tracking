@@ -35,19 +35,28 @@ const GlobalTasks = () => {
   const [batchAssignees, setBatchAssignees] = useState([]); 
   const [batchDueDate, setBatchDueDate] = useState('');
 
+
+
+
   useEffect(() => {
     const loadDropdownData = async () => {
+     
       try {
-        const [projRes, usersRes] = await Promise.all([
-          axios.get('/projects'),
-          axios.get('/users') 
-        ]);
+        const projRes = await axios.get('/projects');
         setProjectsList(projRes.data);
+      } catch (error) {
+        console.error("Failed to load projects for dropdown");
+      }
+
+     
+      try {
+        const usersRes = await axios.get('/users');
         setUsersList(usersRes.data);
       } catch (error) {
-        console.error("Failed to load filter dropdowns");
+        console.error("Failed to load users for dropdown. Member might not have access.");
       }
     };
+    
     loadDropdownData();
   }, []);
 
