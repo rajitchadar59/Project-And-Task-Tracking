@@ -146,8 +146,15 @@ const updateTask = async (req, res) => {
   }
 };
 
+
+
 const deleteTask = async (req, res) => {
   try {
+    
+    if (req.role !== 'Manager') {
+      return res.status(403).json({ error: 'Access denied: Only managers can delete tasks.' });
+    }
+
     const { id } = req.params;
     await Task.findByIdAndDelete(id);
     await Task.updateMany({ dependencies: id }, { $pull: { dependencies: id } });
