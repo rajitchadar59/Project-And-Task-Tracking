@@ -99,7 +99,7 @@ const Dashboard = () => {
       toast.success("Project archived");
       fetchProjects(); 
     } catch (err) {
-      toast.error('Failed to archive project');
+      toast.error('Only the project owner or authorized manager can archive this project.');
     }
   };
 

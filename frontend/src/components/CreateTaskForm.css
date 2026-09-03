@@ -1,81 +1,160 @@
-.create-task-form {
+/* src/components/CreateTaskForm.css */
+.task-form-container {
+  margin-bottom: 32px;
+  width: 100%;
+}
+
+.task-form-card {
   background: #ffffff;
   border: 1px solid #e4e4e4;
   border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 32px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  padding: 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.task-form-card h3 {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  color: #222222;
+  font-weight: 700;
+}
+
+.form-subtitle {
+  margin: 0 0 24px 0;
+  font-size: 14px;
+  color: #6a6a6a;
+}
+
+.task-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.form-title {
-  margin: 0;
-  font-size: 18px;
-  color: #222222;
-}
-
-.form-primary-row {
+.form-row-primary {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
-.flex-1 { flex: 1; min-width: 200px; }
-.flex-2 { flex: 2; min-width: 250px; }
-
-.form-input, .form-select {
-  padding: 12px 16px;
-  border: 1px solid #d1d1d1;
-  border-radius: 8px;
-  font-size: 14.5px;
-  outline: none;
-  color: #222222;
-  transition: border-color 0.2s;
+.form-row-secondary, .form-row-tertiary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
-.form-input:focus, .form-select:focus {
-  border-color: #222222;
-}
+.flex-1 { flex: 1; min-width: 220px; }
+.flex-2 { flex: 2; min-width: 280px; }
 
-.form-date {
-  color: #6a6a6a;
-}
-
-.form-secondary-row {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.multi-select-group {
-  flex: 1;
-  min-width: 250px;
+.form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.multi-select-group label {
+.form-group label {
   font-size: 13.5px;
   font-weight: 600;
   color: #222222;
 }
 
-.btn-create-task {
-  align-self: flex-start;
-  background: #222222;
+.form-group input, .form-group select {
+  padding: 12px 16px;
+  border: 1px solid #d1d1d1;
+  border-radius: 10px;
+  font-size: 14.5px;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #222222;
+}
+
+.form-group input:focus, .form-group select:focus {
+  border-color: #222222;
+  box-shadow: 0 0 0 1px #222222;
+}
+
+.search-sub-input {
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  margin-bottom: 6px;
+  background: #fcfcfc !important;
+}
+
+.checkbox-scroll-box {
+  border: 1px solid #e4e4e4;
+  border-radius: 10px;
+  padding: 12px;
+  max-height: 150px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fcfcfc;
+}
+
+.checkbox-scroll-box::-webkit-scrollbar {
+  width: 5px;
+}
+.checkbox-scroll-box::-webkit-scrollbar-thumb {
+  background: #d1d1d1;
+  border-radius: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #222222;
+  font-weight: 500;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #ff385c;
+  cursor: pointer;
+}
+
+.empty-text {
+  font-size: 13px;
+  color: #8c8c8c;
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
+}
+
+.btn-create {
+  background: #ff385c;
   color: #ffffff;
   border: none;
-  padding: 12px 24px;
+  padding: 12px 28px;
   border-radius: 999px;
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
+  align-self: flex-start;
+  margin-top: 10px;
+  box-shadow: 0 4px 12px rgba(255, 56, 92, 0.25);
 }
 
-.btn-create-task:hover {
-  background: #000000;
+.btn-create:hover {
+  background: #d93a5c;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .form-row-secondary, .form-row-tertiary {
+    grid-template-columns: 1fr;
+  }
+  .task-form-card {
+    padding: 20px;
+  }
 }

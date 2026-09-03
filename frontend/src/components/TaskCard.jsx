@@ -1,5 +1,4 @@
-import React from 'react';
-import SearchableMultiSelect from './SearchableMultiSelect';
+import React, { useState } from 'react';
 import './TaskCard.css';
 
 const TaskCard = ({ 
@@ -12,11 +11,15 @@ const TaskCard = ({
   isTimelineOpen, onToggleTimeline, 
   commentText, onCommentChange, onAddComment 
 }) => {
+  const [editMemberSearch, setEditMemberSearch] = useState('');
+  const [editTaskSearch, setEditTaskSearch] = useState('');
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done';
   const hasDismissed = task.dismissedBy?.some(id => String(id) === String(userId));
   const isAssignedToMe = task.assignedTo?.some(u => String(u._id || u) === String(userId));
-  const canDismiss = role === 'Manager' || isAssignedToMe;
+  
+  
+  const canDismiss = isAssignedToMe;
 
   const toggleEditAssignee = (id) => {
     const current = editForm.assignedTo || [];
@@ -28,7 +31,15 @@ const TaskCard = ({
     setEditForm({ ...editForm, dependencies: current.includes(id) ? current.filter(tid => tid !== id) : [...current, id] });
   };
 
-  const tasksForEdit = allTasks.filter(t => t._id !== task._id);
+  const tasksForEdit = (allTasks || []).filter(t => t._id !== task._id);
+
+  const filteredEditMembers = (projectMembers || []).filter(m => 
+    m.name?.toLowerCase().includes(editMemberSearch.toLowerCase())
+  );
+
+  const filteredEditTasks = tasksForEdit.filter(t => 
+    t.title?.toLowerCase().includes(editTaskSearch.toLowerCase())
+  );
 
   if (isEditing) {
     return (
@@ -49,26 +60,47 @@ const TaskCard = ({
           <div className="edit-row-large">
             <div className="edit-multi-group">
               <label>Assign To:</label>
-              <SearchableMultiSelect 
-                items={projectMembers} 
-                selectedIds={editForm.assignedTo} 
-                onToggle={toggleEditAssignee} 
-                placeholder="🔍 Search members..." emptyMessage="No members" 
+              <input 
+                type="text" 
+                placeholder="🔍 Search members..." 
+                value={editMemberSearch} 
+                onChange={e => setEditMemberSearch(e.target.value)}
+                className="search-sub-input"
               />
+              <div className="edit-checkbox-list">
+                {filteredEditMembers.map(m => (
+                  <label key={m._id} className="checkbox-label">
+                    <input type="checkbox" checked={editForm.assignedTo.includes(m._id)} onChange={() => toggleEditAssignee(m._id)} /> 
+                    <span>{m.name}</span>
+                  </label>
+                ))}
+                {filteredEditMembers.length === 0 && <span className="empty-text">No members found.</span>}
+              </div>
             </div>
+
             <div className="edit-multi-group">
               <label>Dependencies:</label>
-              <SearchableMultiSelect 
-                items={tasksForEdit} 
-                selectedIds={editForm.dependencies} 
-                onToggle={toggleEditDependency} 
-                placeholder="🔍 Search tasks..." emptyMessage="No tasks" 
+              <input 
+                type="text" 
+                placeholder="🔍 Search tasks..." 
+                value={editTaskSearch} 
+                onChange={e => setEditTaskSearch(e.target.value)}
+                className="search-sub-input"
               />
+              <div className="edit-checkbox-list">
+                {filteredEditTasks.map(t => (
+                  <label key={t._id} className="checkbox-label">
+                    <input type="checkbox" checked={editForm.dependencies.includes(t._id)} onChange={() => toggleEditDependency(t._id)} /> 
+                    <span>{t.title}</span>
+                  </label>
+                ))}
+                {filteredEditTasks.length === 0 && <span className="empty-text">No tasks found.</span>}
+              </div>
             </div>
           </div>
 
           <div className="task-actions mt-3">
-            <button className="btn-save" onClick={() => onSaveEdit(task._id)}>Save Changes</button>
+            <button className="btn-save" onClick={() => onSaveEdit(task._id)}>Save</button>
             <button className="btn-cancel" onClick={onCancelEdit}>Cancel</button>
           </div>
         </div>
@@ -89,7 +121,7 @@ const TaskCard = ({
   return (
     <div className={`task-card ${isSelectedForBatch ? 'selected' : ''}`} style={{ borderLeftColor: getStatusColor(task.status) }}>
       <div className="task-header">
-        <h4 className="task-title">{task.title}</h4>
+        <h4 className="task-title text-truncate" title={task.title}>{task.title}</h4>
         <input className="task-checkbox" type="checkbox" checked={isSelectedForBatch} onChange={() => onToggleBatchTask(task._id)} />
       </div>
       <p className="task-desc">{task.description}</p>
@@ -107,12 +139,16 @@ const TaskCard = ({
         </div>
         <div className="meta-item">
           <span className="meta-key">Assigned:</span> 
-          <span className="meta-val">{task.assignedTo?.length ? task.assignedTo.map(u => u.name).join(', ') : 'Unassigned'}</span>
+          <span className="meta-val text-truncate" title={task.assignedTo?.length ? task.assignedTo.map(u => u.name).join(', ') : 'Unassigned'}>
+            {task.assignedTo?.length ? task.assignedTo.map(u => u.name).join(', ') : 'Unassigned'}
+          </span>
         </div>
         {task.dependencies?.length > 0 && (
           <div className="meta-item">
             <span className="meta-key">Depends On:</span> 
-            <span className="meta-val">{task.dependencies.map(d => d.title).join(', ')}</span>
+            <span className="meta-val text-truncate" title={task.dependencies.map(d => d.title).join(', ')}>
+              {task.dependencies.map(d => d.title).join(', ')}
+            </span>
           </div>
         )}
         {task.dueDate && (
@@ -126,12 +162,12 @@ const TaskCard = ({
       </div>
 
       {isOverdue && !hasDismissed && canDismiss && (
-        <button className="btn-dismiss" onClick={() => onDismissAlert(task._id)}>Dismiss Overdue Alert For You</button>
+        <button className="btn-dismiss" onClick={() => onDismissAlert(task._id)}>Dismiss Alert</button>
       )}
 
       <div className="task-actions mt-3">
         <button className="btn-ghost" onClick={() => onToggleTimeline(task._id)}>
-          {isTimelineOpen ? 'Hide Audit Log' : 'View Audit Log'}
+          {isTimelineOpen ? 'Hide Audit Logs' : 'View Audit Logs'}
         </button>
         <button className="btn-ghost color-blue" onClick={() => onStartEdit(task)}>Edit</button>
         {role === 'Manager' && (
@@ -151,7 +187,7 @@ const TaskCard = ({
             ))}
           </div>
           <div className="timeline-comment-box">
-            <input type="text" placeholder="Add a comment..." value={commentText || ''} onChange={(e) => onCommentChange(task._id, e.target.value)} className="comment-input" />
+            <input type="text" placeholder="Add comment..." value={commentText || ''} onChange={(e) => onCommentChange(task._id, e.target.value)} className="comment-input" />
             <button className="btn-comment" onClick={() => onAddComment(task._id)}>Post</button>
           </div>
         </div>

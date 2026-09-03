@@ -28,7 +28,6 @@ const ProjectView = () => {
     title: '', description: '', priority: 'Medium', dueDate: '', assignedTo: [], dependencies: []
   });
 
-  // BATCH UPDATE STATES
   const [selectedBatchTasks, setSelectedBatchTasks] = useState([]);
   const [batchStatus, setBatchStatus] = useState('');
   const [batchAssignees, setBatchAssignees] = useState([]); 
@@ -132,30 +131,29 @@ const ProjectView = () => {
     setSelectedBatchTasks(prev => prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]);
   };
 
-  // ✅ MAGIC FIX: Fully Detailed Custom Toast Logic 
+  // ✅ FIXED BATCH UPDATE WITH DETAILED SUCCESS & FAILURE REASONS
   const handleBatchUpdate = async () => {
     if (selectedBatchTasks.length === 0) return;
     
     const updates = {};
     let updateLabel = "";
 
-    // Find out exactly what is being updated to display in the success toast
     if (batchStatus) {
       updates.status = batchStatus;
-      updateLabel = `Status ➔ ${batchStatus}`;
+      updateLabel = `Status changed to ➔ ${batchStatus}`;
     } else if (batchAssignees.length > 0) {
       updates.assignedTo = batchAssignees;
       const assigneeNames = project?.members
         ?.filter(m => batchAssignees.includes(m._id))
-        .map(m => m.name).join(', ') || "New Assignees";
-      updateLabel = `Assigned ➔ ${assigneeNames}`;
+        .map(m => m.name).join(', ') || "New Members";
+      updateLabel = `Assigned to ➔ ${assigneeNames}`;
     } else if (batchDueDate) {
       updates.dueDate = batchDueDate;
-      updateLabel = `Due Date ➔ ${new Date(batchDueDate).toLocaleDateString()}`;
+      updateLabel = `Due Date changed to ➔ ${new Date(batchDueDate).toLocaleDateString()}`;
     }
 
     if (Object.keys(updates).length === 0) {
-      toast.error("Please provide a new value for the update.");
+      toast.error("Please choose an update type and value first.");
       return;
     }
 
@@ -165,13 +163,12 @@ const ProjectView = () => {
       const successCount = data.successful ? data.successful.length : 0;
       const failCount = data.failed ? data.failed.length : 0;
       
-      // Detailed Custom Toast Rendering
+      // Custom Detailed Toast UI
       toast((t) => (
         <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
           
-          {/* Header with Close Button */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e4e4e4', paddingBottom: '8px' }}>
-            <strong style={{ fontSize: '15px', color: '#111827' }}>Batch Update Results</strong>
+            <strong style={{ fontSize: '15px', color: '#111827' }}>Batch Update Summary</strong>
             <button 
               onClick={() => toast.dismiss(t.id)}
               style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#6b7280', padding: '0 4px', lineHeight: '1' }}
@@ -180,50 +177,45 @@ const ProjectView = () => {
             </button>
           </div>
           
-          {/* Scrollable Results Area */}
-          <div style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '8px' }}>
+          <div style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
             
-            {/* SUCCESS SECTION */}
+            {/* SUCCESS LIST */}
             {successCount > 0 && (
               <div style={{ marginBottom: failCount > 0 ? '16px' : '0' }}>
-                <strong style={{ color: '#059669', fontSize: '14px', display: 'block', marginBottom: '10px' }}>
+                <span style={{ color: '#059669', fontSize: '13.5px', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
                   ✓ Successfully Updated ({successCount})
-                </strong>
+                </span>
                 {data.successful.map((s, i) => (
-                  <div key={`s-${i}`} style={{ marginBottom: '10px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>{s.title}</div>
-                    <div style={{ fontSize: '13px', color: '#059669', paddingLeft: '12px', borderLeft: '2px solid #34d399', marginTop: '3px' }}>
-                      {updateLabel}
-                    </div>
+                  <div key={`s-${i}`} style={{ background: '#f0fdf4', borderLeft: '3px solid #059669', padding: '8px 10px', marginBottom: '6px', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#1f2937' }}>{s.title}</div>
+                    <div style={{ fontSize: '12.5px', color: '#047857', marginTop: '2px' }}>{updateLabel}</div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* FAILURE SECTION */}
+            {/* FAILURE LIST WITH REASONS */}
             {failCount > 0 && (
               <div>
-                <strong style={{ color: '#e11d48', fontSize: '14px', display: 'block', marginBottom: '10px' }}>
-                  ✗ Failed Updates ({failCount})
-                </strong>
+                <span style={{ color: '#e11d48', fontSize: '13.5px', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
+                  ✗ Failed / Rejected ({failCount})
+                </span>
                 {data.failed.map((f, i) => (
-                  <div key={`f-${i}`} style={{ marginBottom: '10px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>{f.title}</div>
-                    <div style={{ fontSize: '13px', color: '#e11d48', paddingLeft: '12px', borderLeft: '2px solid #fb7185', marginTop: '3px', lineHeight: '1.4' }}>
-                      {f.reason}
-                    </div>
+                  <div key={`f-${i}`} style={{ background: '#fff1f2', borderLeft: '3px solid #e11d48', padding: '8px 10px', marginBottom: '6px', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#1f2937' }}>{f.title}</div>
+                    <div style={{ fontSize: '12.5px', color: '#be123c', marginTop: '2px', fontWeight: 500 }}>Reason: {f.reason}</div>
                   </div>
                 ))}
               </div>
             )}
+
           </div>
         </div>
       ), { 
-        duration: 12000, 
-        style: { minWidth: '350px', maxWidth: '450px', padding: '16px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' } 
+        duration: 15000, 
+        style: { minWidth: '380px', maxWidth: '460px', padding: '16px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)' } 
       });
 
-      // Clear all states
       setSelectedBatchTasks([]); 
       setBatchStatus(''); 
       setBatchAssignees([]); 
@@ -267,54 +259,57 @@ const ProjectView = () => {
   if (!project) return <div className="page-loader">Loading project...</div>;
 
   return (
-    <div className="project-view-container" style={{ paddingBottom: selectedBatchTasks.length > 0 ? '100px' : '40px' }}>
-      
-      <div className="project-view-header">
-        <div>
-          <Link to="/dashboard" className="back-link">&larr; Back to Dashboard</Link>
-          <h2 className="project-view-title">{project.name}</h2>
+    <div className="project-view-wrapper" style={{ paddingBottom: selectedBatchTasks.length > 0 ? '100px' : '40px' }}>
+      <div className="project-view-content">
+
+        <div className="project-view-header">
+          <div>
+            <Link to="/dashboard" className="back-link">&larr; Back to Dashboard</Link>
+            <h2 className="project-view-title"> {project.name}</h2>
+          </div>
         </div>
-      </div>
 
-      {role === 'Manager' && (
-        <CreateTaskForm 
-          onSubmit={handleCreateTask}
-          title={title} setTitle={setTitle}
-          description={description} setDescription={setDescription}
-          priority={priority} setPriority={setPriority}
-          dueDate={dueDate} setDueDate={setDueDate}
-          projectMembers={project.members} tasks={tasks}
-          assignedTo={assignedTo} setAssignedTo={setAssignedTo}
-          selectedDependencies={selectedDependencies} setSelectedDependencies={setSelectedDependencies}
-        />
-      )}
-
-      <div className="section-title">
-        <h3>Project Tasks</h3>
-      </div>
-
-      <div className="tasks-grid">
-        {tasks.map(task => (
-          <TaskCard 
-            key={task._id}
-            task={task} role={role} userId={userId}
-            isEditing={editingTaskId === task._id}
-            editForm={editForm} setEditForm={setEditForm}
-            onSaveEdit={submitEdit} onCancelEdit={() => setEditingTaskId(null)} onStartEdit={startEditing}
-            onDelete={handleDeleteTask} onStatusChange={handleStatusChange} onDismissAlert={handleDismissAlert}
-            projectMembers={project.members} allTasks={tasks}
-            isSelectedForBatch={selectedBatchTasks.includes(task._id)}
-            onToggleBatchTask={toggleBatchTask}
-            isTimelineOpen={openTimelines.includes(task._id)}
-            onToggleTimeline={toggleTimeline}
-            commentText={comments[task._id]}
-            onCommentChange={handleCommentChange}
-            onAddComment={handleAddComment}
+        {role === 'Manager' && (
+          <CreateTaskForm 
+            onSubmit={handleCreateTask}
+            title={title} setTitle={setTitle}
+            description={description} setDescription={setDescription}
+            priority={priority} setPriority={setPriority}
+            dueDate={dueDate} setDueDate={setDueDate}
+            projectMembers={project.members} tasks={tasks}
+            assignedTo={assignedTo} setAssignedTo={setAssignedTo}
+            selectedDependencies={selectedDependencies} setSelectedDependencies={setSelectedDependencies}
           />
-        ))}
-        {tasks.length === 0 && (
-          <div className="tasks-empty">No tasks have been created in this project yet.</div>
         )}
+
+        <div className="section-title">
+          <h3>Project Tasks</h3>
+        </div>
+
+        <div className="tasks-grid">
+          {tasks.map(task => (
+            <TaskCard 
+              key={task._id}
+              task={task} role={role} userId={userId}
+              isEditing={editingTaskId === task._id}
+              editForm={editForm} setEditForm={setEditForm}
+              onSaveEdit={submitEdit} onCancelEdit={() => setEditingTaskId(null)} onStartEdit={startEditing}
+              onDelete={handleDeleteTask} onStatusChange={handleStatusChange} onDismissAlert={handleDismissAlert}
+              projectMembers={project.members} allTasks={tasks}
+              isSelectedForBatch={selectedBatchTasks.includes(task._id)}
+              onToggleBatchTask={toggleBatchTask}
+              isTimelineOpen={openTimelines.includes(task._id)}
+              onToggleTimeline={toggleTimeline}
+              commentText={comments[task._id]}
+              onCommentChange={handleCommentChange}
+              onAddComment={handleAddComment}
+            />
+          ))}
+          {tasks.length === 0 && (
+            <div className="tasks-empty">No tasks have been created in this project yet.</div>
+          )}
+        </div>
+
       </div>
 
       <BatchUpdateBar 

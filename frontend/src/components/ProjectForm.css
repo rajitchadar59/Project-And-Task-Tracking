@@ -1,3 +1,4 @@
+/* src/components/ProjectForm.css */
 .project-form-container {
   margin-bottom: 40px;
 }
@@ -7,13 +8,14 @@
   border: 1px solid #e4e4e4;
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .project-form-card h3 {
   margin: 0 0 4px 0;
   font-size: 20px;
   color: #222222;
+  font-weight: 700;
 }
 
 .form-subtitle {
@@ -49,47 +51,85 @@
 .form-group input[type="text"] {
   padding: 12px 16px;
   border: 1px solid #d1d1d1;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14.5px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  color: #222222;
 }
 
 .form-group input[type="text"]:focus {
   border-color: #222222;
+  box-shadow: 0 0 0 1px #222222;
 }
 
+.search-sub-input {
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  border: 1px solid #d1d1d1;
+  border-radius: 8px;
+  outline: none;
+  background: #fcfcfc !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Horizontal Slider Layout for Members */
 .member-checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
   padding: 16px;
   background: #fcfcfc;
   border: 1px solid #e4e4e4;
-  border-radius: 8px;
-  max-height: 180px;
-  overflow-y: auto;
+  border-radius: 10px;
+  overflow-x: auto; /* Horizontal scrolling enable karne ke liye */
+  overflow-y: hidden;
+  white-space: nowrap;
+  scroll-behavior: smooth;
+}
+
+.member-checkbox-grid::-webkit-scrollbar {
+  height: 6px;
+}
+.member-checkbox-grid::-webkit-scrollbar-thumb {
+  background: #d1d1d1;
+  border-radius: 10px;
+}
+.member-checkbox-grid::-webkit-scrollbar-thumb:hover {
+  background: #b0b0b0;
 }
 
 .member-checkbox-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   color: #222222;
   cursor: pointer;
+  font-weight: 500;
+  flex-shrink: 0; /* Taaki items compress na ho */
+  background: #ffffff;
+  border: 1px solid #e4e4e4;
+  padding: 8px 12px;
+  border-radius: 8px;
 }
 
 .member-checkbox-label input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: #222222;
+  accent-color: #ff385c;
   cursor: pointer;
 }
 
 .no-members {
   font-size: 13px;
   color: #8c8c8c;
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
+  width: 100%;
 }
 
 .form-actions {
@@ -99,25 +139,27 @@
 }
 
 .btn-submit {
-  background: #222222;
+  background: #ff385c;
   color: #ffffff;
   border: none;
-  padding: 12px 24px;
+  padding: 12px 28px;
   border-radius: 999px;
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 12px rgba(255, 56, 92, 0.25);
 }
 
 .btn-submit:hover {
-  background: #000000;
+  background: #d93a5c;
+  transform: translateY(-1px);
 }
 
 .btn-cancel {
   background: #f7f7f7;
   color: #222222;
-  border: 1px solid #e4e4e4;
+  border: 1px solid #d1d1d1;
   padding: 12px 24px;
   border-radius: 999px;
   font-size: 14.5px;

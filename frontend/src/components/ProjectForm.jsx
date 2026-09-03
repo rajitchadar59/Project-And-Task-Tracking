@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ProjectForm.css';
 
 const ProjectForm = ({ 
@@ -10,6 +10,12 @@ const ProjectForm = ({
   users, 
   isEditing 
 }) => {
+  const [memberSearch, setMemberSearch] = useState('');
+
+  const filteredMembers = users
+    .filter(u => u.role === 'Member')
+    .filter(u => u.name.toLowerCase().includes(memberSearch.toLowerCase()));
+
   return (
     <div className="project-form-container">
       <div className="project-form-card">
@@ -42,8 +48,15 @@ const ProjectForm = ({
           
           <div className="form-group">
             <label>Assign Members</label>
+            <input 
+              type="text" 
+              placeholder="🔍 Search members..." 
+              value={memberSearch} 
+              onChange={(e) => setMemberSearch(e.target.value)}
+              className="search-sub-input"
+            />
             <div className="member-checkbox-grid">
-              {users.filter(u => u.role === 'Member').map(u => (
+              {filteredMembers.map(u => (
                 <label key={u._id} className="member-checkbox-label">
                   <input 
                     type="checkbox" 
@@ -53,8 +66,8 @@ const ProjectForm = ({
                   <span>{u.name}</span>
                 </label>
               ))}
-              {users.filter(u => u.role === 'Member').length === 0 && (
-                <span className="no-members">No members available to assign.</span>
+              {filteredMembers.length === 0 && (
+                <span className="no-members">No members found.</span>
               )}
             </div>
           </div>
